@@ -68,8 +68,7 @@ COMMIT
 -A INPUT -i wlan0 -p tcp -m tcp --dport 22 -j ACCEPT
 -A INPUT -i wlan0 -p tcp -m tcp --dport 443 -j ACCEPT
 
-# allow incoming traffic to the outgoing connections,
-# et al for clients from the private network
+# allow incoming traffic to the outgoing connections
 -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 
 # prohibit everything else incoming
