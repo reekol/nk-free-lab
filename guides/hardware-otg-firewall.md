@@ -46,6 +46,8 @@ apt-get install dnsmasq iptables iptables-persistent
 
 ### Configure dnsmasq
 
+/etc/dnsmsq.conf
+
 ```
 #...
 interface=usb0
