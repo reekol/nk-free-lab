@@ -98,6 +98,14 @@ while(true){
 				NextcloudTalk_SendMessage("@$actor Integrity check Done");
 			}
 
+			if($keyword === "lock"){
+				NextcloudTalk_SendMessage('@'.$actor.' '. `loginctl lock-session && xset -display :0.0 dpms force off`);
+			}
+
+			if($keyword === "unlock"){
+				NextcloudTalk_SendMessage('@'.$actor.' '. `loginctl unlock-session && xset -display :0.0 dpms force on`);
+			}
+
 			if($keyword === "heater on"){
 				NextcloudTalk_SendMessage('@'.$actor.' '. `curl -s "https://coldborn.com/index.php/apps/smartdev/api/1.0/setstate?id={heaterDeviceId)&state=1" -X GET -u 'admin:adminpass'`);
 			}
@@ -115,6 +123,8 @@ while(true){
 					"4) Weather - Display weather for preprogrammed locations.",
 					"5) Users - Display Nextcloud users.",
 					"6) Integrity - Run integrity check of the core.",
+					"7) Lock - Lock workstation."
+					"8) Unlock - Unlock workstation."
 				]));
 			}
 		}
