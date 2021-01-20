@@ -2,12 +2,12 @@
 // Start this file from command prompt -> $php -f nextcloud_chat_bot.php
 set_time_limit(0);
 
-$SERVER 		= "https://mycloud.com";
-$USER 		  = "{automation}"; // First you will have to create this user in your Nextcloud instance or use existing one.
-$PASS 		  = "{automationpass}";
+$SERVER = "https://mycloud.com";
+$USER = "{automation}"; // First you will have to create this user in your Nextcloud instance or use existing one.
+$PASS = "{automationpass}";
 $channel_id = 'channelOrRoomId';
-$occ 			  = "/mnt/archive/nextcloud/occ";
-$php			  = "/mnt/archive/httpd/php";
+$occ  = "/mnt/archive/nextcloud/occ";
+$php  = "/mnt/archive/httpd/php";
 
 function request($uri,$post = false){
 	global $USER, $PASS;
@@ -54,11 +54,11 @@ while(true){
 	$lastMsg = NextcloudTalk_ReadLatest($lastId);
 	if($lastMsg)
 	{
-		$article	   = $lastMsg->ocs->data[0];
-		$actor		= $article->actorId;
-		$lastId 		= $article->id;
-		$isForBot 	= $USER === $article->messageParameters->{'mention-user1'}->id;
-		$keyword 	= trim(str_replace('{mention-user1}','',strtolower($article->message)));
+		$article = $lastMsg->ocs->data[0];
+		$actor = $article->actorId;
+		$lastId = $article->id;
+		$isForBot = $USER === $article->messageParameters->{'mention-user1'}->id;
+		$keyword = trim(str_replace('{mention-user1}','',strtolower($article->message)));
 		
 		if($isForBot){
 
