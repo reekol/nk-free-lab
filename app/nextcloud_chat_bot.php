@@ -107,11 +107,11 @@ while(true){
 			}
 
 			if($keyword === "heater on"){
-				NextcloudTalk_SendMessage('@'.$actor.' '. `curl -s "https://mycloud.com/index.php/apps/smartdev/api/1.0/setstate?id={heaterDeviceId)&state=1" -X GET -u 'admin:adminpass'`);
+				NextcloudTalk_SendMessage('@'.$actor.' '. `curl -s "${SERVER}/index.php/apps/smartdev/api/1.0/setstate?id={heaterDeviceId)&state=1" -X GET -u 'admin:adminpass'`);
 			}
 			
 			if($keyword === "heater off"){
-				NextcloudTalk_SendMessage('@'.$actor.' '. `curl -s "https://mycloud.com/index.php/apps/smartdev/api/1.0/setstate?id={heaterDeviceId}&state=0" -X GET -u 'admin:adminpass'`);
+				NextcloudTalk_SendMessage('@'.$actor.' '. `curl -s "${SERVER}/index.php/apps/smartdev/api/1.0/setstate?id={heaterDeviceId}&state=0" -X GET -u 'admin:adminpass'`);
 			}
 
 			if($keyword === "help"){
