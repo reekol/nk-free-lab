@@ -3,11 +3,12 @@
 set_time_limit(0);
 
 $SERVER = "https://mycloud.com";
-$USER = "{automation}"; // First you will have to create this user in your Nextcloud instance or use existing one.
+$USER = "{automation}";
 $PASS = "{automationpass}";
-$channel_id = 'channelOrRoomId';
-$occ  = "/mnt/archive/nextcloud/occ";
-$php  = "/mnt/archive/httpd/php";
+$channel_id = '{channelOrRoomId}';
+$ncroot = '/mnt/archive/nextcloud';
+$occ = "$ncroot/occ";
+$php = "/mnt/archive//httpd/php";
 
 function request($uri,$post = false){
 	global $USER, $PASS;
@@ -59,7 +60,7 @@ while(true){
 		$lastId = $article->id;
 		$isForBot = $USER === $article->messageParameters->{'mention-user1'}->id;
 		$keyword = trim(str_replace('{mention-user1}','',strtolower($article->message)));
-		
+
 		if($isForBot){
 
 			if($keyword === "load"){
@@ -76,22 +77,22 @@ while(true){
 				$lastMsg = NextcloudTalk_SendMessage("@$actor Uptime is: " . $timeFormat );
 				$lastId = $lastMsg->ocs->data->id;
 			}
-					
+
 			if($keyword === "sensors"){
 				NextcloudTalk_SendMessage("@$actor");
 				NextcloudTalk_SendMessage(`sensors`);
 			}
-			
+
 			if($keyword === "weather"){
 				NextcloudTalk_SendMessage("@$actor");
 				NextcloudTalk_SendMessage(`curl -s wttr.in/{Jambol,Sofia,Moscow}?format="%c+%t+%l\\n" 2>&1`);
 			}
-			
+
 			if($keyword === "users"){
 				NextcloudTalk_SendMessage("@$actor");
 				NextcloudTalk_SendMessage(`sudo -u www-data $php $occ user:list`);
 			}
-			
+
 			if($keyword === "integrity"){
 				NextcloudTalk_SendMessage("@$actor");
 				NextcloudTalk_SendMessage(`sudo -u www-data $php $occ integrity:check-core`);
@@ -107,24 +108,35 @@ while(true){
 			}
 
 			if($keyword === "heater on"){
-				NextcloudTalk_SendMessage('@'.$actor.' '. `curl -s "${SERVER}/index.php/apps/smartdev/api/1.0/setstate?id={heaterDeviceId)&state=1" -X GET -u 'admin:adminpass'`);
+				NextcloudTalk_SendMessage('@'.$actor.' '. `curl -s "${SERVER}/index.php/apps/smartdev/api/1.0/setstate?id={heaterDeviceId}&state=1" -X GET -u '${USER}:${PASS}'`);
 			}
-			
+
 			if($keyword === "heater off"){
-				NextcloudTalk_SendMessage('@'.$actor.' '. `curl -s "${SERVER}/index.php/apps/smartdev/api/1.0/setstate?id={heaterDeviceId}&state=0" -X GET -u 'admin:adminpass'`);
+				NextcloudTalk_SendMessage('@'.$actor.' '. `curl -s "${SERVER}/index.php/apps/smartdev/api/1.0/setstate?id={heaterDeviceId}&state=0" -X GET -u '${USER}:${PASS}'`);
+			}
+
+			if($keyword === "cam"){
+				$camFile = 'Cam-'.date('Y-m-d-H-i-s-').microtime(true).'.jpg';
+				`sudo -u www-data ffmpeg -i rtsp://192.168.1.12:8001/mpeg4 -f image2  -frames:v 1 -y $ncroot/data/${USER}/files/Talk/${camFile}`;
+				`curl -s '${SERVER}/ocs/v2.php/apps/files_sharing/api/v1/shares' -H 'Content-Type: application/json' -H "OCS-APIRequest: true" -X POST -u '${USER}:${PASS}' \
+					--data-raw '{"path":"/Talk/${camFile}","permissions":19,"shareType":10,"shareWith":"$channel_id"}'`;
+				unset($camFile);
 			}
 
 			if($keyword === "help"){
 				NextcloudTalk_SendMessage(implode("\n",[
 					"@$actor",
-					"1) Load - Display system load.",
-					"2) Uptime - Display system uptime.",
-					"3) Sensors - Display system sensors.",
-					"4) Weather - Display weather for preprogrammed locations.",
-					"5) Users - Display Nextcloud users.",
-					"6) Integrity - Run integrity check of the core.",
-					"7) Lock - Lock workstation.",
-					"8) Unlock - Unlock workstation."
+					"1 ) Load - Display system load.",
+					"2 ) Uptime - Display system uptime.",
+					"3 ) Sensors - Display system sensors.",
+					"4 ) Weather - Display weather for preprogrammed locations.",
+					"5 ) Users - Display Nextcloud users.",
+					"6 ) Integrity - Run integrity check of the core.",
+					"7 ) Lock - Lock workstation.",
+					"8 ) Unlock - Unlock workstation.",
+					"9 ) Heater on - turns ON  smart device named heater (raquires smartdev app).",
+					"10) Heater on - turns OFF smart device named heater (raquires smartdev app).",
+					"11) Cam - creates image from rtsp camera and sends it to this chat."
 				]));
 			}
 		}
