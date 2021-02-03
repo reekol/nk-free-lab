@@ -142,7 +142,7 @@ let bot = async (lastMsg) => {
 			})
 			break;
 		default:
-			fastCmd(actor,[
+			NextcloudTalk_SendMessage("@" + actor +  "\n" + [
 					"1 ) Load - Display system load.",
 					"2 ) Uptime - Display system uptime.",
 					"3 ) Sensors - Display system sensors.",
