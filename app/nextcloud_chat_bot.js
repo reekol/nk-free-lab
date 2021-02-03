@@ -98,7 +98,7 @@ let bot = async (lastMsg) => {
 	) // Is adressed to the bot
 	{
 		let command = article.message.replace('{mention-user1}','').trim().split(' ')
-		switch(command[0]) {
+		switch(command[0].toLowerCase()) {
 		case "load":
 			fastCmd(actor,`uptime | grep -ohe 'load average[s:][: ].*'`)
 			break;
