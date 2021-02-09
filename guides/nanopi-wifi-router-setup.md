@@ -96,6 +96,7 @@ udevadm control --reload-rule
 /etc/rc.local
 ```
 systemctl stop NetworkManager
+systemctl disable NetworkManager.service
 ifdown wlan0
 ifup wlan0 
 hostapd /etc/hostapd/hostapd.conf -B
