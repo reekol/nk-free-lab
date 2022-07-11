@@ -60,33 +60,33 @@ services:
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
     networks:
       monitoring:
-        ipv4_address: 172.20.0.4
+        ipv4_address: 172.20.0.3
         aliases:
           - portainer.${DOMAIN?coldborn}.localhost
 
-  nextcloud:
+  cloud:
     image: docker.io/nextcloud:latest
     hostname: cloud.${DOMAIN?coldborn}.localhost
-    container_name: nk_nextcloud
+    container_name: nk_cloud
     volumes:
-      - 'nextcloud_www:/var/www/html'
-      - 'nextcloud_apps:/var/www/html/custom_apps'
-      - 'nextcloud_config:/var/www/html/config'
-      - 'nextcloud_data:/var/www/html/data'
+      - 'cloud_www:/var/www/html'
+      - 'cloud_apps:/var/www/html/custom_apps'
+      - 'cloud_config:/var/www/html/config'
+      - 'cloud_data:/var/www/html/data'
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nextcloud.tls.certresolver=le"
-      - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.${DOMAIN?coldborn}.localhost`)"
+      - "traefik.http.routers.cloud.tls.certresolver=le"
+      - "traefik.http.routers.cloud.rule=Host(`cloud.${DOMAIN?coldborn}.localhost`)"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
-      - "traefik.http.routers.nextcloud.entrypoints=https"
-      - "traefik.http.routers.nextcloud.tls=true"
-      - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
+      - "traefik.http.routers.cloud.entrypoints=https"
+      - "traefik.http.routers.cloud.tls=true"
+      - "traefik.http.services.cloud.loadbalancer.server.port=80"
     environment:
       - OVERWRITEPROTOCOL=https
 
     networks:
       monitoring:
-        ipv4_address: 172.20.0.6
+        ipv4_address: 172.20.0.4
         aliases:
           - cloud.${DOMAIN?coldborn}.localhost
 
@@ -107,9 +107,17 @@ services:
       - "traefik.http.routers.gitlab.entrypoints=https"
       - "traefik.http.routers.gitlab.tls=true"
       - "traefik.http.services.gitlab.loadbalancer.server.port=80"
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.${DOMAIN}.localhost'
+        nginx['listen_https'] = false
+        nginx['listen_port'] = 80
+        # backup
+        gitlab_rails['backup_archive_permissions'] = 0644 # See: https://docs.gitlab.com/ce/raketasks/backup_restore.html#backup-archive-permissions
+        gitlab_rails['backup_keep_time'] = 1468800 # 17 days, we'll do a full backup every 5 days
     networks:
       monitoring:
-        ipv4_address: 172.20.0.7
+        ipv4_address: 172.20.0.5
         aliases:
           - gitlab.${DOMAIN?coldborn}.localhost
 
@@ -129,7 +137,7 @@ services:
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
     networks:
       monitoring:
-        ipv4_address: 172.20.0.8
+        ipv4_address: 172.20.0.6
         aliases:
           - grafana.${DOMAIN?coldborn}.localhost
 
@@ -149,7 +157,7 @@ services:
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     networks:
       monitoring:
-        ipv4_address: 172.20.0.9
+        ipv4_address: 172.20.0.7
         aliases:
           - nodeexporter.${DOMAIN?coldborn}.localhost
 
@@ -169,7 +177,7 @@ services:
       - '--web.enable-lifecycle'
     networks:
       monitoring:
-        ipv4_address: 172.20.0.10
+        ipv4_address: 172.20.0.8
         aliases:
           - prometheus.${DOMAIN?coldborn}.localhost
   torrent:
@@ -191,20 +199,20 @@ services:
       - "traefik.http.services.torrent.loadbalancer.server.port=3000"
     networks:
       monitoring:
-        ipv4_address: 172.20.0.12
+        ipv4_address: 172.20.0.9
         aliases:
           - torrent.${DOMAIN?coldborn}.localhost
 
 volumes:
   portainer_data:
     driver: local
-  nextcloud_www:
+  cloud_www:
     driver: local
-  nextcloud_apps:
+  cloud_apps:
     driver: local
-  nextcloud_config:
+  cloud_config:
     driver: local
-  nextcloud_data:
+  cloud_data:
     driver: local
   gitlab_config:
     driver: local
