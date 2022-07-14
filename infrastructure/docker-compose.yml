@@ -52,7 +52,7 @@ services:
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.portainer.tls.certresolver=le"
+#      - "traefik.http.routers.portainer.tls.certresolver=le"
       - "traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN:-coldborn}.localhost`)"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
       - "traefik.http.routers.portainer.entrypoints=https"
@@ -75,7 +75,7 @@ services:
       - 'cloud_data:/var/www/html/data'
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.cloud.tls.certresolver=le"
+#      - "traefik.http.routers.cloud.tls.certresolver=le"
       - "traefik.http.routers.cloud.rule=Host(`cloud.${DOMAIN:-coldborn}.localhost`)"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
       - "traefik.http.routers.cloud.entrypoints=https"
@@ -103,7 +103,7 @@ services:
       - 'gitlab_data:/var/opt/gitlab'
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.gitlab.tls.certresolver=le"
+#      - "traefik.http.routers.gitlab.tls.certresolver=le"
       - "traefik.http.routers.gitlab.rule=Host(`gitlab.${DOMAIN:-coldborn}.localhost`)"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
       - "traefik.http.routers.gitlab.entrypoints=https"
@@ -131,7 +131,7 @@ services:
       - 'grafana_storage:/var/lib/grafana'
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.grafana.tls.certresolver=le"
+#      - "traefik.http.routers.grafana.tls.certresolver=le"
       - "traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN:-coldborn}.localhost`)"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
       - "traefik.http.routers.grafana.entrypoints=https"
@@ -192,7 +192,7 @@ services:
       - torrent_downloads:/downloads
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.torrent.tls.certresolver=le"
+#      - "traefik.http.routers.torrent.tls.certresolver=le"
       #- "traefik.http.middlewares.admin-auth.basicauth.users=${USERNAME}:${HASHED_PASSWORD}"
       #- "traefik.http.routers.torrent.middlewares=admin-auth"
       - "traefik.http.routers.torrent.rule=Host(`torrent.${DOMAIN:-coldborn}.localhost`)"
