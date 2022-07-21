@@ -92,8 +92,8 @@ services:
     environment:
       - OVERWRITEPROTOCOL=https
       - NEXTCLOUD_TRUSTED_DOMAINS=cloud.${DOMAIN:-coldborn.localhost}
-      - PHP_MEMORY_LIMIT=1024M
-      - PHP_UPLOAD_LIMIT=1024M
+      - PHP_MEMORY_LIMIT=2048M
+      - PHP_UPLOAD_LIMIT=2048M
     networks:
       monitoring:
         ipv4_address: 172.20.0.4
@@ -229,6 +229,43 @@ services:
         aliases:
           - cadvisor.${DOMAIN:-coldborn.localhost}
 
+  gotify:
+    image: gotify/server
+    container_name: nk_gotify
+    hostname: gotify.${DOMAIN:-coldborn.localhost}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gotify.tls.certresolver=myresolver"
+      - "traefik.http.routers.gotify.rule=Host(`gotify.${DOMAIN:-coldborn.localhost}`)"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
+      - "traefik.http.routers.gotify.entrypoints=https"
+      - "traefik.http.routers.gotify.tls=true"
+      - "traefik.http.services.gotify.loadbalancer.server.port=80"
+    networks:
+      monitoring:
+        ipv4_address: 172.20.0.11
+        aliases:
+          - php.${DOMAIN:-coldborn.localhost}
+
+  php:
+    image: php:7.4-apache
+    hostname: php.${DOMAIN:-coldborn.localhost}
+    container_name: nk_php
+    volumes:
+      - "./php_www:/var/www/html"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.php.tls.certresolver=myresolver"
+      - "traefik.http.routers.php.rule=Host(`seqr.link`,`winterborn.org`,`vetshares.com`,`coldborn.com`,`domsql.com`)"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
+      - "traefik.http.routers.php.entrypoints=https"
+      - "traefik.http.routers.php.tls=true"
+      - "traefik.http.services.php.loadbalancer.server.port=80"
+    networks:
+      monitoring:
+        ipv4_address: 172.20.0.12
+        aliases:
+          - php.${DOMAIN:-coldborn.localhost}
 
 volumes:
   portainer_data:
