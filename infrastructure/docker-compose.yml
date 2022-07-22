@@ -4,6 +4,7 @@ services:
   traefik:
     image: traefik:latest
     container_name: nk_traefik
+    platform: linux/x86_64
     deploy:
       placement:
         constraints:
@@ -50,6 +51,7 @@ services:
     image: docker.io/portainer/portainer-ce:latest
     hostname: portainer.${DOMAIN:-coldborn.localhost}
     container_name: nk_portainer
+    platform: linux/x86_64
     command:
       --ssl
     volumes:
@@ -76,6 +78,7 @@ services:
     image: docker.io/nextcloud:latest
     hostname: cloud.${DOMAIN:-coldborn.localhost}
     container_name: nk_cloud
+    platform: linux/x86_64
     volumes:
       - 'cloud_www:/var/www/html'
       - 'cloud_apps:/var/www/html/custom_apps'
@@ -104,6 +107,7 @@ services:
     image: docker.io/gitlab/gitlab-ce:latest
     hostname: gitlab.${DOMAIN:-coldborn.localhost}
     container_name: nk_gitlab
+    platform: linux/x86_64
     shm_size: 1GB
     volumes:
       - 'gitlab_config:/etc/gitlab'
@@ -135,6 +139,7 @@ services:
     image: docker.io/grafana/grafana-oss:latest
     hostname: grafana.${DOMAIN:-coldborn.localhost}
     container_name: nk_grafana
+    platform: linux/x86_64
     volumes:
       - 'grafana_storage:/var/lib/grafana'
     labels:
@@ -155,6 +160,7 @@ services:
     image: prom/node-exporter:latest
     hostname: nodeexporter.${DOMAIN:-coldborn.localhost}
     container_name: nk_node_exporter
+    platform: linux/x86_64
     restart: unless-stopped
     volumes:
       - /proc:/host/proc:ro
@@ -175,6 +181,7 @@ services:
     image: prom/prometheus:latest
     hostname: prometheus.${DOMAIN:-coldborn.localhost}
     container_name: nk_prometheus
+    platform: linux/x86_64
     restart: unless-stopped
     volumes:
       - prometheus_conf:/etc/prometheus
@@ -195,6 +202,7 @@ services:
     image: jpillora/cloud-torrent
     hostname: torrent.${DOMAIN:-coldborn.localhost}
     container_name: nk_torrent
+    platform: linux/x86_64
     restart: unless-stopped
     volumes:
       - torrent_downloads:/downloads
@@ -216,6 +224,7 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: nk_cadvisor
+    platform: linux/x86_64
     #ports:
       #- 8080:8080
     volumes:
@@ -233,6 +242,7 @@ services:
     image: gotify/server
     container_name: nk_gotify
     hostname: gotify.${DOMAIN:-coldborn.localhost}
+    platform: linux/x86_64
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gotify.tls.certresolver=myresolver"
@@ -251,6 +261,7 @@ services:
     image: php:7.4-apache
     hostname: php.${DOMAIN:-coldborn.localhost}
     container_name: nk_php
+    platform: linux/x86_64
     volumes:
       - "./php_www:/var/www/html"
     labels:
