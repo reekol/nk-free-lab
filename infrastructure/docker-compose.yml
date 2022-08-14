@@ -11,21 +11,19 @@ services:
           - node.role == manager
           #- node.labels.traefik.traefik_certificates == true
     command:
+      --api
       --api.insecure=true
+      --api.dashboard=true
       --providers.docker
       --entrypoints.http.address=:80
       --entrypoints.https.address=:443
-      --api
       --log
       --accesslog
       --serverstransport.insecureskipverify=true
-      --certificatesresolvers.myresolver.acme.tlschallenge=true
-      --certificatesresolvers.myresolver.acme.email=cupuyc@gmail.com
-      --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
+#      --certificatesresolvers.coldbornresolver.acme.tlschallenge=true
+#      --certificatesresolvers.coldbornresolver.acme.email=cupuyc@gmail.com
+#      --certificatesresolvers.coldbornresolver.acme.storage=/letsencrypt/acme.json
     ports:
-      - target: 80
-        published: 80
-        mode: host
       - target: 443
         published: 443
         mode: host
@@ -33,14 +31,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - "./letsencrypt:/letsencrypt"
     labels:
-      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+      - "traefik.http.routers.traefik.tls.certresolver=coldbornresolver"
       - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN:-coldborn.localhost}`)"
-      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
       - "traefik.http.routers.traefik.entrypoints=https"
       - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.services.traefik.loadbalancer.passhostheader=true"
-      - "traefik.http.services.traefik.loadbalancer.server.scheme=http"
-      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
     networks:
       monitoring:
         ipv4_address: 172.20.0.2
@@ -60,7 +57,7 @@ services:
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.portainer.tls.certresolver=myresolver"
+      - "traefik.http.routers.portainer.tls.certresolver=coldbornresolver"
       - "traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN:-coldborn.localhost}`)"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
       - "traefik.http.routers.portainer.entrypoints=https"
@@ -86,7 +83,7 @@ services:
       - 'cloud_data:/var/www/html/data'
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.cloud.tls.certresolver=myresolver"
+      - "traefik.http.routers.cloud.tls.certresolver=coldbornresolver"
       - "traefik.http.routers.cloud.rule=Host(`cloud.${DOMAIN:-coldborn.localhost}`)"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
       - "traefik.http.routers.cloud.entrypoints=https"
@@ -115,7 +112,7 @@ services:
       - 'gitlab_data:/var/opt/gitlab'
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.gitlab.tls.certresolver=myresolver"
+      - "traefik.http.routers.gitlab.tls.certresolver=coldbornresolver"
       - "traefik.http.routers.gitlab.rule=Host(`gitlab.${DOMAIN:-coldborn.localhost}`)"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
       - "traefik.http.routers.gitlab.entrypoints=https"
@@ -144,7 +141,7 @@ services:
       - 'grafana_storage:/var/lib/grafana'
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.grafana.tls.certresolver=myresolver"
+      - "traefik.http.routers.grafana.tls.certresolver=coldbornresolver"
       - "traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN:-coldborn.localhost}`)"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
       - "traefik.http.routers.grafana.entrypoints=https"
@@ -208,7 +205,7 @@ services:
       - torrent_downloads:/downloads
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.torrent.tls.certresolver=myresolver"
+      - "traefik.http.routers.torrent.tls.certresolver=coldbornresolver"
       - "traefik.http.middlewares.admin-auth.basicauth.users=${USERNAME:-admin}:${HASHED_PASSWORD:-adminpass}"
       - "traefik.http.routers.torrent.middlewares=admin-auth"
       - "traefik.http.routers.torrent.rule=Host(`torrent.${DOMAIN:-coldborn.localhost}`)"
@@ -245,7 +242,7 @@ services:
     platform: linux/x86_64
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.gotify.tls.certresolver=myresolver"
+      - "traefik.http.routers.gotify.tls.certresolver=coldbornresolver"
       - "traefik.http.routers.gotify.rule=Host(`gotify.${DOMAIN:-coldborn.localhost}`)"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
       - "traefik.http.routers.gotify.entrypoints=https"
@@ -266,7 +263,7 @@ services:
       - "./php_www:/var/www/html"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.php.tls.certresolver=myresolver"
+      - "traefik.http.routers.php.tls.certresolver=coldbornresolver"
       - "traefik.http.routers.php.rule=Host(`seqr.link`,`winterborn.org`,`vetshares.com`,`coldborn.com`,`domsql.com`)"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
       - "traefik.http.routers.php.entrypoints=https"
