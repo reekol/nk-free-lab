@@ -39,8 +39,8 @@ services:
       - "traefik.http.services.traefik.loadbalancer.passhostheader=true"
       - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
     networks:
-      monitoring:
-        ipv4_address: 172.20.0.2
+      infra_network:
+        ipv4_address: 173.20.0.2
         aliases:
           - traefik.${DOMAIN:-coldborn.localhost}
 
@@ -66,8 +66,8 @@ services:
       - "traefik.http.services.portainer.loadbalancer.server.scheme=https"
       - "traefik.http.services.portainer.loadbalancer.server.port=9443"
     networks:
-      monitoring:
-        ipv4_address: 172.20.0.3
+      infra_network:
+        ipv4_address: 173.20.0.3
         aliases:
           - portainer.${DOMAIN:-coldborn.localhost}
 
@@ -95,8 +95,8 @@ services:
       - PHP_MEMORY_LIMIT=2048M
       - PHP_UPLOAD_LIMIT=2048M
     networks:
-      monitoring:
-        ipv4_address: 172.20.0.4
+      infra_network:
+        ipv4_address: 173.20.0.4
         aliases:
           - cloud.${DOMAIN:-coldborn.localhost}
 
@@ -127,8 +127,8 @@ services:
         gitlab_rails['backup_archive_permissions'] = 0644 # See: https://docs.gitlab.com/ce/raketasks/backup_restore.html#backup-archive-permissions
         gitlab_rails['backup_keep_time'] = 1468800 # 17 days, we'll do a full backup every 5 days
     networks:
-      monitoring:
-        ipv4_address: 172.20.0.5
+      infra_network:
+        ipv4_address: 173.20.0.5
         aliases:
           - gitlab.${DOMAIN:-coldborn.localhost}
 
@@ -148,8 +148,8 @@ services:
       - "traefik.http.routers.grafana.tls=true"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
     networks:
-      monitoring:
-        ipv4_address: 172.20.0.6
+      infra_network:
+        ipv4_address: 173.20.0.6
         aliases:
           - grafana.${DOMAIN:-coldborn.localhost}
 
@@ -169,8 +169,8 @@ services:
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     networks:
-      monitoring:
-        ipv4_address: 172.20.0.7
+      infra_network:
+        ipv4_address: 173.20.0.7
         aliases:
           - nodeexporter.${DOMAIN:-coldborn.localhost}
 
@@ -190,8 +190,8 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
     networks:
-      monitoring:
-        ipv4_address: 172.20.0.8
+      infra_network:
+        ipv4_address: 173.20.0.8
         aliases:
           - prometheus.${DOMAIN:-coldborn.localhost}
 
@@ -214,8 +214,8 @@ services:
       - "traefik.http.routers.torrent.tls=true"
       - "traefik.http.services.torrent.loadbalancer.server.port=3000"
     networks:
-      monitoring:
-        ipv4_address: 172.20.0.9
+      infra_network:
+        ipv4_address: 173.20.0.9
         aliases:
           - torrent.${DOMAIN:-coldborn.localhost}
   cadvisor:
@@ -230,8 +230,8 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     networks:
-      monitoring:
-        ipv4_address: 172.20.0.10
+      infra_network:
+        ipv4_address: 173.20.0.10
         aliases:
           - cadvisor.${DOMAIN:-coldborn.localhost}
 
@@ -249,8 +249,8 @@ services:
       - "traefik.http.routers.gotify.tls=true"
       - "traefik.http.services.gotify.loadbalancer.server.port=80"
     networks:
-      monitoring:
-        ipv4_address: 172.20.0.11
+      infra_network:
+        ipv4_address: 173.20.0.11
         aliases:
           - php.${DOMAIN:-coldborn.localhost}
 
@@ -270,8 +270,8 @@ services:
       - "traefik.http.routers.php.tls=true"
       - "traefik.http.services.php.loadbalancer.server.port=80"
     networks:
-      monitoring:
-        ipv4_address: 172.20.0.12
+      infra_network:
+        ipv4_address: 173.20.0.12
         aliases:
           - php.${DOMAIN:-coldborn.localhost}
 
@@ -301,8 +301,8 @@ volumes:
   traefik_certificates:
 
 networks:
-  monitoring:
+  infra_network:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: 173.20.0.0/16
