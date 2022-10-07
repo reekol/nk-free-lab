@@ -20,9 +20,9 @@ services:
       --log
       --accesslog
       --serverstransport.insecureskipverify=true
-#      --certificatesresolvers.coldbornresolver.acme.tlschallenge=true
-#      --certificatesresolvers.coldbornresolver.acme.email=cupuyc@gmail.com
-#      --certificatesresolvers.coldbornresolver.acme.storage=/letsencrypt/acme.json
+      --certificatesresolvers.coldbornresolver.acme.tlschallenge=true
+      --certificatesresolvers.coldbornresolver.acme.email=cupuyc@gmail.com
+      --certificatesresolvers.coldbornresolver.acme.storage=/letsencrypt/acme.json
     ports:
       - target: 443
         published: 443
@@ -53,7 +53,7 @@ services:
       --ssl
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock'
-      - 'portainer_data:/data'
+      - './portainer_data:/data'
     restart: always
     labels:
       - "traefik.enable=true"
@@ -77,10 +77,10 @@ services:
     container_name: nk_cloud
     platform: linux/x86_64
     volumes:
-      - 'cloud_www:/var/www/html'
-      - 'cloud_apps:/var/www/html/custom_apps'
-      - 'cloud_config:/var/www/html/config'
-      - 'cloud_data:/var/www/html/data'
+      - './cloud_www:/var/www/html'
+      - './cloud_apps:/var/www/html/custom_apps'
+      - './cloud_config:/var/www/html/config'
+      - './cloud_data:/var/www/html/data'
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.cloud.tls.certresolver=coldbornresolver"
@@ -107,9 +107,9 @@ services:
     platform: linux/x86_64
     shm_size: 1GB
     volumes:
-      - 'gitlab_config:/etc/gitlab'
-      - 'gitlab_logs:/var/log/gitlab'
-      - 'gitlab_data:/var/opt/gitlab'
+      - './gitlab_config:/etc/gitlab'
+      - './gitlab_logs:/var/log/gitlab'
+      - './gitlab_data:/var/opt/gitlab'
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gitlab.tls.certresolver=coldbornresolver"
@@ -138,7 +138,7 @@ services:
     container_name: nk_grafana
     platform: linux/x86_64
     volumes:
-      - 'grafana_storage:/var/lib/grafana'
+      - './grafana_storage:/var/lib/grafana'
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.grafana.tls.certresolver=coldbornresolver"
@@ -181,8 +181,8 @@ services:
     platform: linux/x86_64
     restart: unless-stopped
     volumes:
-      - prometheus_conf:/etc/prometheus
-      - prometheus_data:/prometheus
+      - "./prometheus_conf:/etc/prometheus"
+      - "./prometheus_data:/prometheus"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -202,7 +202,7 @@ services:
     platform: linux/x86_64
     restart: unless-stopped
     volumes:
-      - torrent_downloads:/downloads
+      - "./torrent_downloads:/downloads"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.torrent.tls.certresolver=coldbornresolver"
@@ -276,28 +276,6 @@ services:
           - php.${DOMAIN:-coldborn.localhost}
 
 volumes:
-  portainer_data:
-    driver: local
-  cloud_www:
-    driver: local
-  cloud_apps:
-    driver: local
-  cloud_config:
-    driver: local
-  cloud_data:
-    driver: local
-  gitlab_config:
-    driver: local
-  gitlab_data:
-    driver: local
-  gitlab_logs:
-    driver: local
-  grafana_storage:
-    driver: local
-  torrent_downloads:
-    driver: local
-  prometheus_conf: {}
-  prometheus_data: {}
   traefik_certificates:
 
 networks:
