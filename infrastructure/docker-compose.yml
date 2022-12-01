@@ -29,7 +29,7 @@ services:
         mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./letsencrypt:/letsencrypt
+      - ./data/letsencrypt:/letsencrypt
     labels:
 #      - traefik.http.routers.traefik.tls.certresolver=coldbornresolver
       - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN:-coldborn.localhost}`)
@@ -53,7 +53,7 @@ services:
       --ssl
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./portainer_data:/data
+      - ./data/portainer/data:/data
     restart: always
     labels:
       - traefik.enable=true
@@ -77,10 +77,10 @@ services:
     container_name: nk_cloud
     platform: linux/x86_64
     volumes:
-      - ./cloud_www:/var/www/html
-      - ./cloud_apps:/var/www/html/custom_apps
-      - ./cloud_config:/var/www/html/config
-      - ./cloud_data:/var/www/html/data
+      - ./data/cloud/var/www/html:/var/www/html
+      - ./data/cloud/var/www/html/custom_apps:/var/www/html/custom_apps
+      - ./data/cloud/var/www/html/config:/var/www/html/config
+      - ./data/cloud/var/www/html/data:/var/www/html/data
     labels:
       - traefik.enable=true
 #      - traefik.http.routers.cloud.tls.certresolver=coldbornresolver
@@ -107,9 +107,9 @@ services:
     platform: linux/x86_64
     shm_size: 1GB
     volumes:
-      - ./gitlab_config:/etc/gitlab
-      - ./gitlab_logs:/var/log/gitlab
-      - ./gitlab_data:/var/opt/gitlab
+      - ./data/gitlab/etc/gitlab:/etc/gitlab
+      - ./data/gitlab/var/log/gitlab:/var/log/gitlab
+      - ./data/gitlab/var/opt/gitlab:/var/opt/gitlab
     labels:
       - traefik.enable=true
 #      - traefik.http.routers.gitlab.tls.certresolver=coldbornresolver
@@ -117,6 +117,7 @@ services:
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.gitlab.entrypoints=https
       - traefik.http.routers.gitlab.tls=true
+      - traefik.http.services.gitlab.loadbalancer.server.scheme=http
       - traefik.http.services.gitlab.loadbalancer.server.port=80
     environment:
       GITLAB_OMNIBUS_CONFIG: |
@@ -171,13 +172,28 @@ services:
         aliases:
           - gitlab.${DOMAIN:-coldborn.localhost}
 
+  gitlabrunner:
+    image: gitlab/gitlab-runner:latest
+    hostname: gitlabrunner.${DOMAIN:-coldborn.localhost}
+    container_name: nk_service_gitlabrunner
+    platform: linux/x86_64
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/gitlabrunner/etc/gitlab-runner:/etc/gitlab-runner
+    networks:
+      infra_network:
+        ipv4_address: 173.20.0.51
+        aliases:
+          - gitlabrunner.${DOMAIN:-coldborn.localhost}
+
   grafana:
     image: docker.io/grafana/grafana-oss:latest
     hostname: grafana.${DOMAIN:-coldborn.localhost}
     container_name: nk_grafana
     platform: linux/x86_64
     # volumes:
-    #   - ./grafana_storage:/var/lib/grafana
+    #   - ./grafana/grafana/var/lib/grafana:/var/lib/grafana
     labels:
       - traefik.enable=true
 #      - traefik.http.routers.grafana.tls.certresolver=coldbornresolver
@@ -220,8 +236,8 @@ services:
     platform: linux/x86_64
     restart: unless-stopped
     volumes:
-      - ./prometheus_conf:/etc/prometheus
-      - ./prometheus_data:/prometheus
+      - ./data/prometheus/etc/prometheus:/etc/prometheus
+      - ./data/prometheus/prometheus:/prometheus
     command:
       --config.file=/etc/prometheus/prometheus.yml
       --storage.tsdb.path=/prometheus
@@ -241,7 +257,7 @@ services:
     platform: linux/x86_64
     restart: unless-stopped
     volumes:
-      - ./torrent_downloads:/downloads
+      - ./data/torrent/downloads:/downloads
     labels:
       - traefik.enable=true
 #      - traefik.http.routers.torrent.tls.certresolver=coldbornresolver
@@ -291,22 +307,23 @@ services:
       infra_network:
         ipv4_address: 173.20.0.11
         aliases:
-          - php.${DOMAIN:-coldborn.localhost}
+          - gotify.${DOMAIN:-coldborn.localhost}
 
   php:
-    image: php:7.4-apache
+    image: php:8.1-apache
     hostname: php.${DOMAIN:-coldborn.localhost}
     container_name: nk_php
     platform: linux/x86_64
     volumes:
-      - ./php_www:/var/www/html
+      - ./data/php/var/www/html:/var/www/html
     labels:
       - traefik.enable=true
 #      - traefik.http.routers.php.tls.certresolver=coldbornresolver
-      - traefik.http.routers.php.rule=Host(`seqr.link`,`winterborn.org`,`vetshares.com`,`coldborn.com`,`domsql.com`)
+      - traefik.http.routers.php.rule=Host(`php.${DOMAIN:-coldborn.localhost}`,`seqr.link`,`winterborn.org`,`vetshares.com`,`coldborn.com`,`domsql.com`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.php.entrypoints=https
       - traefik.http.routers.php.tls=true
+      - traefik.http.services.php.loadbalancer.server.scheme=http
       - traefik.http.services.php.loadbalancer.server.port=80
     networks:
       infra_network:
@@ -358,7 +375,7 @@ services:
     privileged: true
     volumes:
 #      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - ./freeipaserver.${DOMAIN:-coldborn.localhost}/data:/data:Z
+      - ./data/freeipaserver/data:/data:Z
     command:
       --no-ntp
     environment:
@@ -384,6 +401,27 @@ services:
         ipv4_address: 173.20.0.15
         aliases:
           - freeipaserver.${DOMAIN:-coldborn.localhost}
+
+  swaggerui:
+    image: swaggerapi/swagger-ui:latest
+    restart: always
+    hostname: swaggerui.${DOMAIN:-coldborn.localhost}
+    container_name: nk_web_swaggerui
+    platform: linux/x86_64
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.swaggerui.rule=Host(`swaggerui.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
+      - traefik.http.routers.swaggerui.entrypoints=https
+      - traefik.http.routers.swaggerui.tls=true
+      - traefik.http.services.swaggerui.loadbalancer.passhostheader=true
+      - traefik.http.services.swaggerui.loadbalancer.server.scheme=http
+      - traefik.http.services.swaggerui.loadbalancer.server.port=8080
+    networks:
+      infra_network:
+        ipv4_address: 173.20.0.16
+        aliases:
+          - swaggerui.${DOMAIN:-coldborn.localhost}
 
 volumes:
   traefik_certificates:
