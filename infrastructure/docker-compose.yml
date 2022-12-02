@@ -29,7 +29,7 @@ services:
         mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./data/letsencrypt:/letsencrypt
+      - ./data/traefik/letsencrypt:/letsencrypt
     labels:
 #      - traefik.http.routers.traefik.tls.certresolver=coldbornresolver
       - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN:-coldborn.localhost}`)
@@ -172,20 +172,20 @@ services:
         aliases:
           - gitlab.${DOMAIN:-coldborn.localhost}
 
-  gitlabrunner:
-    image: gitlab/gitlab-runner:latest
-    hostname: gitlabrunner.${DOMAIN:-coldborn.localhost}
-    container_name: nk_service_gitlabrunner
-    platform: linux/x86_64
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./data/gitlabrunner/etc/gitlab-runner:/etc/gitlab-runner
-    networks:
-      infra_network:
-        ipv4_address: 173.20.0.51
-        aliases:
-          - gitlabrunner.${DOMAIN:-coldborn.localhost}
+  # gitlabrunner:
+  #   image: gitlab/gitlab-runner:latest
+  #   hostname: gitlabrunner.${DOMAIN:-coldborn.localhost}
+  #   container_name: nk_service_gitlabrunner
+  #   platform: linux/x86_64
+  #   restart: always
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - ./data/gitlabrunner/etc/gitlab-runner:/etc/gitlab-runner
+  #   networks:
+  #     infra_network:
+  #       ipv4_address: 173.20.0.51
+  #       aliases:
+  #         - gitlabrunner.${DOMAIN:-coldborn.localhost}
 
   grafana:
     image: docker.io/grafana/grafana-oss:latest
@@ -309,29 +309,13 @@ services:
         aliases:
           - gotify.${DOMAIN:-coldborn.localhost}
 
-  php:
-    image: php:8.1-apache
-    hostname: php.${DOMAIN:-coldborn.localhost}
-    container_name: nk_php
-    platform: linux/x86_64
-    volumes:
-      - ./data/php/var/www/html:/var/www/html
-    labels:
-      - traefik.enable=true
-#      - traefik.http.routers.php.tls.certresolver=coldbornresolver
-      - traefik.http.routers.php.rule=Host(`php.${DOMAIN:-coldborn.localhost}`,`seqr.link`,`winterborn.org`,`vetshares.com`,`coldborn.com`,`domsql.com`)
-      - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
-      - traefik.http.routers.php.entrypoints=https
-      - traefik.http.routers.php.tls=true
-      - traefik.http.services.php.loadbalancer.server.scheme=http
-      - traefik.http.services.php.loadbalancer.server.port=80
-    networks:
-      infra_network:
-        ipv4_address: 173.20.0.12
-        aliases:
-          - php.${DOMAIN:-coldborn.localhost}
-
   mariadb:
+    # Prepare backup
+    # docker run --user mysql --rm -v ./data/mariadb/backup:/backup mariadb:latest mariabackup --prepare --target-dir=/backup
+
+    # Restore backup
+    # docker run --user mysql --rm -v ./data/mariadb/var/lib/mysql:/var/lib/mysql -v ./data/mariadb/backup:/backup mariadb:latest mariabackup --copy-back --target-dir=/backup
+
     image: mariadb:latest
     restart: always
     hostname: mariadb.${DOMAIN:-coldborn.localhost}
@@ -339,6 +323,10 @@ services:
     platform: linux/x86_64
     environment:
       MARIADB_ROOT_PASSWORD: example
+    volumes:
+      - ./data/mariadb/var/lib/mysql:/var/lib/mysql
+      - ./data/mariadb/backup:/backup
+      - ./data/mariadb/etc/mysql/conf.d:/etc/mysql/conf.d
     networks:
       infra_network:
         ipv4_address: 173.20.0.13
@@ -422,9 +410,49 @@ services:
         ipv4_address: 173.20.0.16
         aliases:
           - swaggerui.${DOMAIN:-coldborn.localhost}
+  whoami:
+    image: traefik/whoami
+    restart: always
+    hostname: whoami.${DOMAIN:-coldborn.localhost}
+    container_name: nk_web_whoami
+    platform: linux/x86_64
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.whoami.rule=Host(`whoami.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
+      - traefik.http.routers.whoami.entrypoints=https
+      - traefik.http.routers.whoami.tls=true
+      - traefik.http.services.whoami.loadbalancer.passhostheader=true
+      - traefik.http.services.whoami.loadbalancer.server.scheme=http
+      - traefik.http.services.whoami.loadbalancer.server.port=80
+    networks:
+      infra_network:
+        ipv4_address: 173.20.0.17
+        aliases:
+          - whoami.${DOMAIN:-coldborn.localhost}
 
-volumes:
-  traefik_certificates:
+
+  project:
+    build:
+      context: "./resources/project"
+    restart: always
+    hostname: project.${DOMAIN:-coldborn.localhost}
+    container_name: nk_web_project
+    platform: linux/x86_64
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.project.rule=Host(`project.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
+      - traefik.http.routers.project.entrypoints=https
+      - traefik.http.routers.project.tls=true
+      - traefik.http.services.project.loadbalancer.passhostheader=true
+      - traefik.http.services.project.loadbalancer.server.scheme=http
+      - traefik.http.services.project.loadbalancer.server.port=80
+    networks:
+      infra_network:
+        ipv4_address: 173.20.0.18
+        aliases:
+          - project.${DOMAIN:-coldborn.localhost}
 
 networks:
   infra_network:
