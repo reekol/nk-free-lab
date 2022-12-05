@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.3-labs
 FROM alpine:latest
 
-RUN apk  update
+RUN apk update
 RUN apk add bash vim
 RUN apk add apache2 apache2-ldap php81 php81-session php81-zip php81-pdo_mysql php81-phar php81-mbstring php81-iconv php81-tokenizer php81-xml php81-dom php81-xmlwriter php81-curl php81-fileinfo
 RUN apk add php81-apache2

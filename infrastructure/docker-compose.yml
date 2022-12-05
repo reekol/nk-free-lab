@@ -3,7 +3,7 @@ version: '3.8'
 services:
   traefik:
     image: traefik:latest
-    container_name: nk_traefik
+    container_name: ${PREFIX:-nk_}_traefik
     platform: linux/x86_64
     deploy:
       placement:
@@ -47,7 +47,7 @@ services:
   portainer:
     image: docker.io/portainer/portainer-ce:latest
     hostname: portainer.${DOMAIN:-coldborn.localhost}
-    container_name: nk_portainer
+    container_name: ${PREFIX:-nk_}_portainer
     platform: linux/x86_64
     command:
       --ssl
@@ -74,7 +74,7 @@ services:
   cloud:
     image: docker.io/nextcloud:latest
     hostname: cloud.${DOMAIN:-coldborn.localhost}
-    container_name: nk_cloud
+    container_name: ${PREFIX:-nk_}_cloud
     platform: linux/x86_64
     volumes:
       - ./data/cloud/var/www/html:/var/www/html
@@ -92,8 +92,8 @@ services:
     environment:
       - OVERWRITEPROTOCOL=https
       - NEXTCLOUD_TRUSTED_DOMAINS=cloud.${DOMAIN:-coldborn.localhost}
-      - PHP_MEMORY_LIMIT=2048M
-      - PHP_UPLOAD_LIMIT=2048M
+      - PHP_MEMORY_LIMIT=${CLOUD_PHP_MEMORY_LIMIT}
+      - PHP_UPLOAD_LIMIT=${CLOUD_PHP_UPLOAD_LIMIT}
     networks:
       infra_network:
         ipv4_address: 173.20.0.4
@@ -101,9 +101,11 @@ services:
           - cloud.${DOMAIN:-coldborn.localhost}
 
   gitlab:
+    # Deactivate session by userid 34
+    # gitlab-redis-cli DEL "session:gitlab:2::$( gitlab-redis-cli --scan --pattern 'session:user:gitlab:34:*' | cut -d':' -f7 )"
     image: docker.io/gitlab/gitlab-ce:latest
     hostname: gitlab.${DOMAIN:-coldborn.localhost}
-    container_name: nk_gitlab
+    container_name: ${PREFIX:-nk_}_gitlab
     platform: linux/x86_64
     shm_size: 1GB
     volumes:
@@ -124,7 +126,7 @@ services:
         external_url 'https://gitlab.${DOMAIN:-coldborn.localhost}'
         nginx['listen_https'] = false
         nginx['listen_port'] = 80
-
+        gitlab_rails['initial_root_password'] = "${GITLAB_ROOT_PASSWORD}"
         # Backup
         gitlab_rails['backup_archive_permissions'] = 0644 # See: https://docs.gitlab.com/ce/raketasks/backup_restore.html#backup-archive-permissions
         gitlab_rails['backup_keep_time'] = 1468800 # 17 days, we'll do a full backup every 5 days
@@ -134,16 +136,18 @@ services:
         # Ldap
         # How TO connect ldap # https://computingforgeeks.com/how-to-configure-gitlab-freeipa-authentication/
         gitlab_rails['ldap_sync_worker_cron'] = "* * * * *" # Sync at every minute
+        gitlab_rails['ldap_group_sync_worker'] = "* * * * *" # Sync at every minute
+
         gitlab_rails['ldap_servers'] = {
           'main' => {
-            'label' => 'FreeIPA',
+            'label' => '${LDAP_GITLAB_SERVER_NAME}',
             'host' =>  'freeipaserver.${DOMAIN:-coldborn.localhost}',
             'port' => 636,
             'uid' => 'uid',
             'encryption' => 'simple_tls',
             'verify_certificates' => false,
-            'bind_dn' => 'uid=gitlabbind,cn=users,cn=accounts,dc=coldborn,dc=localhost',
-            'password' => 'password',
+            'bind_dn' => '${LDAP_GITLAB_BIND_USER}',
+            'password' => '${LDAP_GITLAB_BIND_PASSWORD}',
             'tls_options' => {
               'ca_file' => '',
               'ssl_version' => '',
@@ -155,8 +159,8 @@ services:
             'active_directory' => true,
             'allow_username_or_email_login' => true,
             'block_auto_created_users' => false,
-            'base' => 'dc=coldborn,dc=localhost',
-            'user_filter' => '(memberOf=cn=gitlab_group,cn=groups,cn=accounts,dc=coldborn,dc=localhost)',
+            'base' => '${LDAP_GITLAB_BASE}',
+            'user_filter' => '${LDAP_GITLAB_USER_FILTER}',
             'attributes' => {
               'username' => ['uid'],
               'email' => ['mail'],
@@ -175,7 +179,7 @@ services:
   # gitlabrunner:
   #   image: gitlab/gitlab-runner:latest
   #   hostname: gitlabrunner.${DOMAIN:-coldborn.localhost}
-  #   container_name: nk_service_gitlabrunner
+  #   container_name: ${PREFIX:-nk_}_service_gitlabrunner
   #   platform: linux/x86_64
   #   restart: always
   #   volumes:
@@ -190,7 +194,7 @@ services:
   grafana:
     image: docker.io/grafana/grafana-oss:latest
     hostname: grafana.${DOMAIN:-coldborn.localhost}
-    container_name: nk_grafana
+    container_name: ${PREFIX:-nk_}_grafana
     platform: linux/x86_64
     # volumes:
     #   - ./grafana/grafana/var/lib/grafana:/var/lib/grafana
@@ -211,7 +215,7 @@ services:
   node-exporter:
     image: prom/node-exporter:latest
     hostname: nodeexporter.${DOMAIN:-coldborn.localhost}
-    container_name: nk_node_exporter
+    container_name: ${PREFIX:-nk_}_node_exporter
     platform: linux/x86_64
     restart: unless-stopped
     volumes:
@@ -232,7 +236,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     hostname: prometheus.${DOMAIN:-coldborn.localhost}
-    container_name: nk_prometheus
+    container_name: ${PREFIX:-nk_}_prometheus
     platform: linux/x86_64
     restart: unless-stopped
     volumes:
@@ -253,7 +257,7 @@ services:
   torrent:
     image: jpillora/cloud-torrent
     hostname: torrent.${DOMAIN:-coldborn.localhost}
-    container_name: nk_torrent
+    container_name: ${PREFIX:-nk_}_torrent
     platform: linux/x86_64
     restart: unless-stopped
     volumes:
@@ -275,7 +279,7 @@ services:
           - torrent.${DOMAIN:-coldborn.localhost}
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
-    container_name: nk_cadvisor
+    container_name: ${PREFIX:-nk_}_cadvisor
     platform: linux/x86_64
     #ports:
       #- 8080:8080
@@ -292,7 +296,7 @@ services:
 
   gotify:
     image: gotify/server
-    container_name: nk_gotify
+    container_name: ${PREFIX:-nk_}_gotify
     hostname: gotify.${DOMAIN:-coldborn.localhost}
     platform: linux/x86_64
     labels:
@@ -319,10 +323,10 @@ services:
     image: mariadb:latest
     restart: always
     hostname: mariadb.${DOMAIN:-coldborn.localhost}
-    container_name: nk_service_mariadb
+    container_name: ${PREFIX:-nk_}_service_mariadb
     platform: linux/x86_64
     environment:
-      MARIADB_ROOT_PASSWORD: example
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
     volumes:
       - ./data/mariadb/var/lib/mysql:/var/lib/mysql
       - ./data/mariadb/backup:/backup
@@ -337,7 +341,7 @@ services:
     image: mariadb/maxscale:latest
     restart: always
     hostname: maxscale.${DOMAIN:-coldborn.localhost}
-    container_name: nk_web_maxscale
+    container_name: ${PREFIX:-nk_}_web_maxscale
     platform: linux/x86_64
     labels:
       - traefik.enable=true
@@ -358,7 +362,7 @@ services:
     image: freeipa/freeipa-server:fedora-37
     restart: always
     hostname: freeipaserver.${DOMAIN:-coldborn.localhost}
-    container_name: nk_web_freeipaserver
+    container_name: ${PREFIX:-nk_}_web_freeipaserver
     platform: linux/x86_64
     privileged: true
     volumes:
@@ -369,7 +373,7 @@ services:
     environment:
       - IPA_SERVER_HOSTNAME=freeipaserver.${DOMAIN:-coldborn.localhost}
       - IPA_SERVER_INSTALL_OPTS=-U -r ${DOMAIN:-coldborn.localhost}
-      - PASSWORD=password # at least 8 characters
+      - PASSWORD=${FREEIPASERVER_ADMIN_PASSWORD} # at least 8 characters
       - VIRTUAL_PROTO=https
       - VIRTUAL_HOST=freeipaserver.${DOMAIN:-coldborn.localhost}
       - VIRTUAL_PORT=443
@@ -394,7 +398,7 @@ services:
     image: swaggerapi/swagger-ui:latest
     restart: always
     hostname: swaggerui.${DOMAIN:-coldborn.localhost}
-    container_name: nk_web_swaggerui
+    container_name: ${PREFIX:-nk_}_web_swaggerui
     platform: linux/x86_64
     labels:
       - traefik.enable=true
@@ -414,7 +418,7 @@ services:
     image: traefik/whoami
     restart: always
     hostname: whoami.${DOMAIN:-coldborn.localhost}
-    container_name: nk_web_whoami
+    container_name: ${PREFIX}_web_whoami
     platform: linux/x86_64
     labels:
       - traefik.enable=true
@@ -437,7 +441,7 @@ services:
       context: "./resources/project"
     restart: always
     hostname: project.${DOMAIN:-coldborn.localhost}
-    container_name: nk_web_project
+    container_name: ${PREFIX:-nk_}_web_project
     platform: linux/x86_64
     labels:
       - traefik.enable=true
