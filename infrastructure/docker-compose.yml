@@ -445,8 +445,8 @@ services:
     hostname: project.${DOMAIN:-coldborn.localhost}
     container_name: ${PREFIX:-nk_}_web_project
     platform: linux/x86_64
-#    volumes:
-#      - ./data/project/project:/project
+    volumes:
+      - ./data/project/project:/project
     environment:
       - DOMAIN=${DOMAIN}
       - LDAP_APACHE_READ_AuthLDAPURL=${LDAP_APACHE_READ_AuthLDAPURL}
