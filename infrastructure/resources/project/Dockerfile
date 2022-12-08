@@ -13,16 +13,15 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" &&
     composer self-update --2
 
 RUN composer global require laravel/installer
-RUN composer create-project laravel/laravel /project
 RUN chmod a+x /usr/local/bin/*
 
 COPY httpd.conf /etc/apache2/httpd.conf
-
 
 RUN echo "#!/bin/bash" > /entrypoint.sh
 RUN echo "touch /log" >> /entrypoint.sh
 RUN echo "[ -d \"/project/public\"  ] || {" >> /entrypoint.sh
 RUN echo "composer create-project laravel/laravel /project" >> /entrypoint.sh
+RUN echo "cd /project && composer require darkaonline/l5-swagger" >> /entrypoint.sh
 RUN echo "}" >> /entrypoint.sh
 
 RUN echo "httpd -k start -DBACKGROUND" >> /entrypoint.sh
