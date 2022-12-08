@@ -16,6 +16,9 @@ RUN composer global require laravel/installer
 RUN chmod a+x /usr/local/bin/*
 
 COPY httpd.conf /etc/apache2/httpd.conf
+COPY create_api_model.sh /create_api_model.sh
+COPY _modelController_.php /_modelController_.php
+COPY _modelName_.php /_modelName_.php
 
 RUN echo "#!/bin/bash" > /entrypoint.sh
 RUN echo "touch /log" >> /entrypoint.sh
@@ -28,5 +31,6 @@ RUN echo "httpd -k start -DBACKGROUND" >> /entrypoint.sh
 RUN echo "tail -F /log" >> /entrypoint.sh
 
 RUN chmod a+x /entrypoint.sh
+RUN chmod a+x /create_api_model.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
