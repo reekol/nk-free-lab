@@ -19,12 +19,14 @@ COPY httpd.conf /etc/apache2/httpd.conf
 COPY create_api_model.sh /create_api_model.sh
 COPY _modelController_.php /_modelController_.php
 COPY _modelName_.php /_modelName_.php
+COPY _migration_.php /_migration_.php
 
 RUN echo "#!/bin/bash" > /entrypoint.sh
 RUN echo "touch /log" >> /entrypoint.sh
 RUN echo "[ -d \"/project/public\"  ] || {" >> /entrypoint.sh
 RUN echo "composer create-project laravel/laravel /project" >> /entrypoint.sh
 RUN echo "cd /project && composer require darkaonline/l5-swagger" >> /entrypoint.sh
+
 RUN echo "}" >> /entrypoint.sh
 
 RUN echo "httpd -k start -DBACKGROUND" >> /entrypoint.sh

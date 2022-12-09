@@ -455,7 +455,7 @@ services:
       - LDAP_APACHE_AuthLDAPBindPassword=${LDAP_APACHE_AuthLDAPBindPassword}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.project.rule=Host(`project.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.routers.project.rule=Host(`project.${DOMAIN:-coldborn.localhost}`,`api.${DOMAIN:-coldborn.localhost}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.project.entrypoints=https
       - traefik.http.routers.project.tls=true

@@ -13,9 +13,13 @@ use Illuminate\Http\Request;
 /**
  *
  *
+ * @OA\Info(title="Pojects's API", version="0.1")
+ *
+ *
  * @OA\Get(
  *  path="/api/_model_",
  *  tags={"_modelName_: RO context"},
+ *  summary="List all/filtered resources",
  *  description="List resources",
  *  @OA\Response(response="default", description="List all/filtered resources"),
  *  @OA\Parameter(
@@ -41,8 +45,9 @@ use Illuminate\Http\Request;
  * @OA\Get(
  *  path="/api/_model_/{uuid}",
  *  tags={"_modelName_: RO context"},
- *  description="Get resource by UUID",
- *  @OA\Response(response="default", description="Show single resource"),
+ *  summary="Show single resource.",
+ *  description="Get resource by UUID.",
+ *  @OA\Response(response="default", description="Show single resource."),
  *  @OA\Parameter(
  *      name="uuid",
  *      in="path",
@@ -53,7 +58,7 @@ use Illuminate\Http\Request;
  *
  * @OA\Post(
  *  path="/api/_model_",
- *  summary="Create new resource entry",
+ *  summary="Create new resource entry.",
  *  description="Create resource with data",
  *  operationId="_modelEntry__post",
  *  tags={"_modelName_: RW context"},
@@ -79,7 +84,7 @@ use Illuminate\Http\Request;
  *
  * @OA\Patch(
  *  path="/api/_model_/{uuid}",
- *  summary="Edit existing resource entry by UUID",
+ *  summary="Edit existing resource entry by UUID.",
  *  description="Edit resource with data",
  *  operationId="_modelEntry__patch",
  *  tags={"_modelName_: RW context"},
@@ -112,7 +117,8 @@ use Illuminate\Http\Request;
  * @OA\Delete(
  *  path="/api/_model_/{uuid}",
  *  tags={"_modelName_: RW context"},
- *  description="Delete resource by UUID",
+ *  summary="Delete resource.",
+ *  description="Delete resource by UUID.",
  *  @OA\Parameter(
  *      name="uuid",
  *      in="path",
@@ -163,9 +169,9 @@ class _modelController_ extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'company_id'    => 'required',
-            'ccy'           => 'required',
-            'multiplier'    => 'required',
+            'key'    => 'required',
+            'value'           => 'required',
+            'options'    => 'required',
         ]);
 
         $_modelEntry_ = _modelName_::create($request->all());
