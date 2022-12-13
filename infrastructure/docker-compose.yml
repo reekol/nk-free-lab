@@ -29,7 +29,7 @@ services:
         mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./data/traefik/letsencrypt:/letsencrypt
+      - ${DATA_DIR}/traefik/letsencrypt:/letsencrypt
     labels:
 #      - traefik.http.routers.traefik.tls.certresolver=coldbornresolver
       - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN:-coldborn.localhost}`)
@@ -53,7 +53,7 @@ services:
       --ssl
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./data/portainer/data:/data
+      - ${DATA_DIR}/portainer/data:/data
     restart: always
     labels:
       - traefik.enable=true
@@ -77,10 +77,10 @@ services:
     container_name: ${PREFIX:-nk_}_cloud
     platform: linux/x86_64
     volumes:
-      - ./data/cloud/var/www/html:/var/www/html
-      - ./data/cloud/var/www/html/custom_apps:/var/www/html/custom_apps
-      - ./data/cloud/var/www/html/config:/var/www/html/config
-      - ./data/cloud/var/www/html/data:/var/www/html/data
+      - ${DATA_DIR}/cloud/var/www/html:/var/www/html
+      - ${DATA_DIR}/cloud/var/www/html/custom_apps:/var/www/html/custom_apps
+      - ${DATA_DIR}/cloud/var/www/html/config:/var/www/html/config
+      - ${DATA_DIR}/cloud/var/www/html/data:/var/www/html/data
     labels:
       - traefik.enable=true
 #      - traefik.http.routers.cloud.tls.certresolver=coldbornresolver
@@ -111,9 +111,9 @@ services:
     platform: linux/x86_64
     shm_size: 1GB
     volumes:
-      - ./data/gitlab/etc/gitlab:/etc/gitlab
-      - ./data/gitlab/var/log/gitlab:/var/log/gitlab
-      - ./data/gitlab/var/opt/gitlab:/var/opt/gitlab
+      - ${DATA_DIR}/gitlab/etc/gitlab:/etc/gitlab
+      - ${DATA_DIR}/gitlab/var/log/gitlab:/var/log/gitlab
+      - ${DATA_DIR}/gitlab/var/opt/gitlab:/var/opt/gitlab
     labels:
       - traefik.enable=true
 #      - traefik.http.routers.gitlab.tls.certresolver=coldbornresolver
@@ -186,7 +186,7 @@ services:
   #   restart: always
   #   volumes:
   #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - ./data/gitlabrunner/etc/gitlab-runner:/etc/gitlab-runner
+  #     - ${DATA_DIR}/gitlabrunner/etc/gitlab-runner:/etc/gitlab-runner
   #   networks:
   #     infra_network:
   #       ipv4_address: 173.20.0.51
@@ -242,8 +242,8 @@ services:
     platform: linux/x86_64
     restart: unless-stopped
     volumes:
-      - ./data/prometheus/etc/prometheus:/etc/prometheus
-      - ./data/prometheus/prometheus:/prometheus
+      - ${DATA_DIR}/prometheus/etc/prometheus:/etc/prometheus
+      - ${DATA_DIR}/prometheus/prometheus:/prometheus
     command:
       --config.file=/etc/prometheus/prometheus.yml
       --storage.tsdb.path=/prometheus
@@ -256,29 +256,6 @@ services:
         aliases:
           - prometheus.${DOMAIN:-coldborn.localhost}
 
-  torrent:
-    image: jpillora/cloud-torrent
-    hostname: torrent.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_torrent
-    platform: linux/x86_64
-    restart: unless-stopped
-    volumes:
-      - ./data/torrent/downloads:/downloads
-    labels:
-      - traefik.enable=true
-#      - traefik.http.routers.torrent.tls.certresolver=coldbornresolver
-      - traefik.http.middlewares.admin-auth.basicauth.users=${USERNAME:-admin}:${HASHED_PASSWORD:-adminpass}
-      - traefik.http.routers.torrent.middlewares=admin-auth
-      - traefik.http.routers.torrent.rule=Host(`torrent.${DOMAIN:-coldborn.localhost}`)
-      - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
-      - traefik.http.routers.torrent.entrypoints=https
-      - traefik.http.routers.torrent.tls=true
-      - traefik.http.services.torrent.loadbalancer.server.port=3000
-    networks:
-      infra_network:
-        ipv4_address: 173.20.0.9
-        aliases:
-          - torrent.${DOMAIN:-coldborn.localhost}
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: ${PREFIX:-nk_}_cadvisor
@@ -317,10 +294,10 @@ services:
 
   mariadb:
     # Prepare backup
-    # docker run --user mysql --rm -v ./data/mariadb/backup:/backup mariadb:latest mariabackup --prepare --target-dir=/backup
+    # docker run --user mysql --rm -v ${DATA_DIR}/mariadb/backup:/backup mariadb:latest mariabackup --prepare --target-dir=/backup
 
     # Restore backup
-    # docker run --user mysql --rm -v ./data/mariadb/var/lib/mysql:/var/lib/mysql -v ./data/mariadb/backup:/backup mariadb:latest mariabackup --copy-back --target-dir=/backup
+    # docker run --user mysql --rm -v ${DATA_DIR}/mariadb/var/lib/mysql:/var/lib/mysql -v ${DATA_DIR}/mariadb/backup:/backup mariadb:latest mariabackup --copy-back --target-dir=/backup
 
     image: mariadb:latest
     restart: always
@@ -330,9 +307,9 @@ services:
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
     volumes:
-      - ./data/mariadb/var/lib/mysql:/var/lib/mysql
-      - ./data/mariadb/backup:/backup
-      - ./data/mariadb/etc/mysql/conf.d:/etc/mysql/conf.d
+      - ${DATA_DIR}/mariadb/var/lib/mysql:/var/lib/mysql
+      - ${DATA_DIR}/mariadb/backup:/backup
+      - ${DATA_DIR}/mariadb/etc/mysql/conf.d:/etc/mysql/conf.d
     networks:
       infra_network:
         ipv4_address: 173.20.0.13
@@ -369,7 +346,7 @@ services:
     privileged: true
     volumes:
 #      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - ./data/freeipaserver/data:/data:Z
+      - ${DATA_DIR}/freeipaserver/data:/data:Z
     command:
       --no-ntp
     environment:
@@ -446,7 +423,7 @@ services:
     container_name: ${PREFIX:-nk_}_web_project
     platform: linux/x86_64
     volumes:
-      - ./data/project/project:/project
+      - ${DATA_DIR}/project/project:/project
     environment:
       - DOMAIN=${DOMAIN}
       - PROJECT_DB_HOST=${PROJECT_DB_HOST}
