@@ -272,8 +272,6 @@ services:
     restart: unless-stopped
     volumes:
       - ${DATA_DIR}/redis/usr/local/etc/redis:/usr/local/etc/redis
-    command:
-      --loglevel=warning
     networks:
       infra_network:
         ipv4_address: 173.20.0.9
