@@ -91,6 +91,7 @@ services:
       - traefik.http.services.cloud.loadbalancer.server.port=80
     environment:
       - OVERWRITEPROTOCOL=https
+      - REDIS_HOST=redis.${DOMAIN:-coldborn.localhost}
       - NEXTCLOUD_TRUSTED_DOMAINS=cloud.${DOMAIN:-coldborn.localhost}
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
       - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
@@ -134,6 +135,13 @@ services:
         gitlab_rails['backup_keep_time'] = 1468800 # 17 days, we'll do a full backup every 5 days
         gitlab_rails['ldap_enabled'] = true
         gitlab_rails['prevent_ldap_sign_in'] = false
+
+        # Disable the bundled Redis
+        redis['enable'] = false
+
+        # Redis via TCP
+        gitlab_rails['redis_host'] = 'redis.${DOMAIN:-coldborn.localhost}'
+        gitlab_rails['redis_port'] = 6379
 
         # Ldap
         # How TO connect ldap # https://computingforgeeks.com/how-to-configure-gitlab-freeipa-authentication/
@@ -255,6 +263,22 @@ services:
         ipv4_address: 173.20.0.8
         aliases:
           - prometheus.${DOMAIN:-coldborn.localhost}
+
+  redis:
+    image: redis:latest
+    hostname: redis.${DOMAIN:-coldborn.localhost}
+    container_name: ${PREFIX:-nk_}_redis
+    platform: linux/x86_64
+    restart: unless-stopped
+    volumes:
+      - ${DATA_DIR}/redis/usr/local/etc/redis:/usr/local/etc/redis
+    command:
+      --loglevel=warning
+    networks:
+      infra_network:
+        ipv4_address: 173.20.0.9
+        aliases:
+          - redis.${DOMAIN:-coldborn.localhost}
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
