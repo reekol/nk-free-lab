@@ -76,6 +76,9 @@ services:
     hostname: cloud.${DOMAIN:-coldborn.localhost}
     container_name: ${PREFIX:-nk_}_cloud
     platform: linux/x86_64
+    depends_on:
+      - "redis"
+      - "mariadb"
     volumes:
       - ${DATA_DIR}/cloud/var/www/html:/var/www/html
       - ${DATA_DIR}/cloud/var/www/html/custom_apps:/var/www/html/custom_apps
@@ -111,6 +114,10 @@ services:
     container_name: ${PREFIX:-nk_}_gitlab
     platform: linux/x86_64
     shm_size: 1GB
+    depends_on:
+      - "redis"
+      - "mariadb"
+      - "freeipaserver"
     volumes:
       - ${DATA_DIR}/gitlab/etc/gitlab:/etc/gitlab
       - ${DATA_DIR}/gitlab/var/log/gitlab:/var/log/gitlab
@@ -270,6 +277,8 @@ services:
     container_name: ${PREFIX:-nk_}_redis
     platform: linux/x86_64
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
     volumes:
       - ${DATA_DIR}/redis/usr/local/etc/redis:/usr/local/etc/redis
     networks:
@@ -277,6 +286,32 @@ services:
         ipv4_address: 173.20.0.9
         aliases:
           - redis.${DOMAIN:-coldborn.localhost}
+
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    hostname: redisinsight.${DOMAIN:-coldborn.localhost}
+    container_name: ${PREFIX:-nk_}_redisinsight
+    platform: linux/x86_64
+    restart: unless-stopped
+    depends_on:
+      - "redis"
+    environment:
+      - RIPROXYENABLE=true
+      - RITRUSTEDORIGINS=https://redisinsight.${DOMAIN:-coldborn.localhost}
+    labels:
+      - traefik.enable=true
+#      - traefik.http.routers.redisinsight.tls.certresolver=coldbornresolver
+      - traefik.http.routers.redisinsight.rule=Host(`redisinsight.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
+      - traefik.http.routers.redisinsight.entrypoints=https
+      - traefik.http.routers.redisinsight.tls=true
+      - traefik.http.services.redisinsight.loadbalancer.server.port=8001
+
+    networks:
+      infra_network:
+        ipv4_address: 173.20.1.9
+        aliases:
+          - redisinsight.${DOMAIN:-coldborn.localhost}
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -326,6 +361,8 @@ services:
     hostname: mariadb.${DOMAIN:-coldborn.localhost}
     container_name: ${PREFIX:-nk_}_service_mariadb
     platform: linux/x86_64
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
     volumes:
