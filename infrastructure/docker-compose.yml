@@ -44,6 +44,31 @@ services:
         aliases:
           - traefik.${DOMAIN:-coldborn.localhost}
 
+  setupc:
+    image: alpine:latest
+    hostname: setupc.${DOMAIN:-coldborn.localhost}
+    container_name: ${PREFIX:-nk_}_setupc
+    platform: linux/x86_64
+    restart: "no"
+    depends_on:
+      - "cloud"
+    command: >
+        sh -c "apk add bash vim htop docker
+        && touch /entrypoint.log
+        && docker container exec ${PREFIX:-nk_}_cloud /bin/bash -c '\
+            apt update && apt install sudo && \
+            sudo -u www-data php occ config:system:set --value 0 remember_login_cookie_lifetime
+        \'
+        && tail -F /entrypoint.log
+        "
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      infra_network:
+        ipv4_address: 173.20.1.2
+        aliases:
+          - setupc.${DOMAIN:-coldborn.localhost}
+
   portainer:
     image: docker.io/portainer/portainer-ce:latest
     hostname: portainer.${DOMAIN:-coldborn.localhost}
@@ -70,7 +95,7 @@ services:
         ipv4_address: 173.20.0.3
         aliases:
           - portainer.${DOMAIN:-coldborn.localhost}
-
+  # sudo -u www-data php occ config:system:set --value 0 remember_login_cookie_lifetime
   cloud:
     image: docker.io/nextcloud:latest
     hostname: cloud.${DOMAIN:-coldborn.localhost}
@@ -365,6 +390,7 @@ services:
       test: ["CMD", "mysqladmin", "ping", "--silent"]
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     volumes:
       - ${DATA_DIR}/mariadb/var/lib/mysql:/var/lib/mysql
       - ${DATA_DIR}/mariadb/backup:/backup
