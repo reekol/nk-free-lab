@@ -58,6 +58,7 @@ services:
         && docker container exec ${PREFIX:-nk_}_cloud /bin/bash -c '\
             apt update && apt install sudo && \
             sudo -u www-data php occ config:system:set --value 0 remember_login_cookie_lifetime
+            sudo -u www-data php occ config:system:set --value '173.20.0.2' trusted_proxies 0
         \'
         && tail -F /entrypoint.log
         "
@@ -117,6 +118,17 @@ services:
       - traefik.http.routers.cloud.entrypoints=https
       - traefik.http.routers.cloud.tls=true
       - traefik.http.services.cloud.loadbalancer.server.port=80
+
+      - traefik.http.middlewares.nc-header.headers.stsSeconds=31536000
+      - traefik.http.middlewares.nc-header.headers.forceSTSHeader=true
+      - traefik.http.middlewares.nc-header.headers.stsPreload=true
+      - traefik.http.middlewares.nc-header.headers.stsIncludeSubdomains=true
+
+      - traefik.http.middlewares.nc-dav.replacepathregex.regex=^/.well-known/ca(l|rd)dav
+      - traefik.http.middlewares.nc-dav.replacepathregex.replacement=/remote.php/dav/
+
+      - traefik.http.routers.cloud.middlewares=nc-dav,nc-header
+
     environment:
       - OVERWRITEPROTOCOL=https
       - REDIS_HOST=redis.${DOMAIN:-coldborn.localhost}
