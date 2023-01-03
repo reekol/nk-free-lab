@@ -99,6 +99,21 @@ services:
             sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.${DOMAIN:-coldborn.localhost}' trusted_proxies 1
             sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.${DOMAIN:-coldborn.localhost}' trusted_domains 0
             sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.2' trusted_domains 1
+            sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.4' trusted_domains 2
+
+            sudo -u www-data php -d memory_limit=512M occ app:enable  \\
+             spreed \\
+             calendar \\
+             deck \\
+             contacts \\
+             forms \\
+             mail \\
+             weather \\
+             dashboard \\
+             tasks \\
+             files_pdfviewer \\
+             richdocumentscode \\
+             richdocuments
 
             echo 'Done'
         \'
