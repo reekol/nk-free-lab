@@ -52,9 +52,11 @@ services:
     restart: "no"
     depends_on:
       - "cloud"
+      - "freeipaserver"
     command: >
         sh -c "apk add bash docker
         && touch /entrypoint.log
+        && docker container exec ${PREFIX:-nk_}_web_freeipaserver /bin/bash -c 'echo ${FREEIPASERVER_ADMIN_PASSWORD} | kinit'
         && docker container exec ${PREFIX:-nk_}_cloud /bin/bash -c '\
           apt-get update && apt-get -y install sudo && \
 
@@ -492,7 +494,7 @@ services:
         aliases:
           - maxscale.${DOMAIN:-coldborn.localhost}
 
-  freeipaserver:
+  freeipaserver: #kinit && ipa
     image: freeipa/freeipa-server:fedora-37
     restart: always
     hostname: freeipaserver.${DOMAIN:-coldborn.localhost}
