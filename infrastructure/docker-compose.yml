@@ -3,13 +3,13 @@ version: '3.8'
 services:
   traefik:
     image: traefik:latest
-    container_name: ${PREFIX:-nk_}_traefik
+    container_name: ${PREFIX}_traefik
     platform: linux/x86_64
     deploy:
       placement:
         constraints:
           - node.role == manager
-          #- node.labels.traefik.traefik_certificates == true
+          - node.labels.traefik.traefik_certificates == true
     command:
       --api
       --api.insecure=true
@@ -31,7 +31,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DATA_DIR}/traefik/letsencrypt:/letsencrypt
     labels:
-#      - traefik.http.routers.traefik.tls.certresolver=coldbornresolver
+      - traefik.http.routers.traefik.tls.certresolver=coldbornresolver
       - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN:-coldborn.localhost}`)
       - traefik.http.routers.traefik.entrypoints=https
       - traefik.http.routers.traefik.tls=true
@@ -43,96 +43,38 @@ services:
         ipv4_address: 173.20.0.2
         aliases:
           - traefik.${DOMAIN:-coldborn.localhost}
+          - cloud.traefik
 
   setupc:
     image: alpine:latest
     hostname: setupc.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_setupc
+    container_name: ${PREFIX}_setupc
     platform: linux/x86_64
     restart: "no"
     depends_on:
+      - "mariadb"
       - "cloud"
-      - "freeipaserver"
     command: >
         sh -c "apk add bash docker
         && touch /entrypoint.log
-        && docker container exec ${PREFIX:-nk_}_web_freeipaserver /bin/bash -c 'echo ${FREEIPASERVER_ADMIN_PASSWORD} | kinit'
-        && docker container exec ${PREFIX:-nk_}_cloud /bin/bash -c '\
-          apt-get update && apt-get -y install sudo && \
-
-          sudo -u www-data php -d memory_limit=512M occ maintenance:install \\
-            --database="mysql" \\
-            --database-name='${NEXTCLOUD_DB_NAME}' \\
-            --database-host='mariadb' \\
-            --database-user='${NEXTCLOUD_DB_USER}' \\
-            --database-pass='${NEXTCLOUD_DB_PASSWORD}' \\
-            --admin-user='${NEXTCLOUD_ADMIN_USER}' \\
-            --admin-pass='${NEXTCLOUD_ADMIN_PASSWORD}'
-
-            sudo -u www-data php -d memory_limit=512M occ config:system:set overwriteprotocol  --value='https'
-            sudo -u www-data php -d memory_limit=512M occ config:system:set datadirectory --value='/var/www/html/data'
-            sudo -u www-data php -d memory_limit=512M occ config:system:set overwrite.cli.url --value='https://cloud.${DOMAIN:-coldborn.localhost}'
-            sudo -u www-data php -d memory_limit=512M occ config:system:set redis host --value='redis'
-            sudo -u www-data php -d memory_limit=512M occ config:system:set redis port --value=6379 --type=integer
-            sudo -u www-data php -d memory_limit=512M occ config:system:set redis password --value=''
-            sudo -u www-data php -d memory_limit=512M occ config:system:set memcache.distributed --value="\\\\OC\\\\Memcache\\\\Redis"
-            sudo -u www-data php -d memory_limit=512M occ config:system:set memcache.locking --value="\\\\OC\\\\Memcache\\\\Redis"
-
-            sudo -u www-data php -d memory_limit=512M occ app:install user_ldap
-            sudo -u www-data php -d memory_limit=512M occ app:enable user_ldap
-
-            sudo -u www-data php -d memory_limit=512M occ ldap:create-empty-config
-            sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapHost             'freeipaserver'
-            sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapPort              389
-            sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapUserFilter       \"${LDAP_NEXTCLOUD_ldapUserFilter}\"
-            sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapLoginFilter      \"${LDAP_NEXTCLOUD_ldapLoginFilter}\"
-            sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapUserFilterGroups '${LDAP_NEXTCLOUD_ldapUserFilterGroups}'
-            sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapAgentName        '${LDAP_NEXTCLOUD_ldapAgentName}'
-            sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapAgentPassword    '${LDAP_NEXTCLOUD_ldapAgentPassword}'
-            sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapBase             '${LDAP_NEXTCLOUD_ldapBase}'
-            sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapBaseGroups       '${LDAP_NEXTCLOUD_ldapBaseGroups}'
-            sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapBaseUsers        '${LDAP_NEXTCLOUD_ldapBaseUsers}'
-            sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapConfigurationActive 1
-            sudo -u www-data php -d memory_limit=512M occ ldap:show-config
-
-            sudo -u www-data php -d memory_limit=512M occ config:system:set --value true allow_local_remote_servers --type=boolean
-            sudo -u www-data php -d memory_limit=512M occ config:system:set --value 0 remember_login_cookie_lifetime
-            sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.2' trusted_proxies 0
-            sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.${DOMAIN:-coldborn.localhost}' trusted_proxies 1
-            sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.${DOMAIN:-coldborn.localhost}' trusted_domains 0
-            sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.2' trusted_domains 1
-            sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.4' trusted_domains 2
-
-            sudo -u www-data php -d memory_limit=512M occ app:enable  \\
-             spreed \\
-             calendar \\
-             deck \\
-             contacts \\
-             forms \\
-             mail \\
-             weather \\
-             dashboard \\
-             tasks \\
-             files_pdfviewer \\
-             richdocumentscode \\
-             richdocuments
-
+        && docker container exec ${PREFIX}_cloud /bin/bash -c '\
+            echo \"173.20.0.2      cloud.${DOMAIN:-coldborn.localhost}\" >> /etc/hosts
             echo 'Done'
-        \'
-        && tail -F /entrypoint.log
+          '
+          tail -F /entrypoint.log
         "
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       infra_network:
-        ipv4_address: 173.20.1.2
+        ipv4_address: 173.20.0.3
         aliases:
           - setupc.${DOMAIN:-coldborn.localhost}
 
   portainer:
     image: docker.io/portainer/portainer-ce:latest
     hostname: portainer.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_portainer
+    container_name: ${PREFIX}_portainer
     platform: linux/x86_64
     command:
       --ssl
@@ -142,7 +84,7 @@ services:
     restart: always
     labels:
       - traefik.enable=true
-#      - traefik.http.routers.portainer.tls.certresolver=coldbornresolver
+      - traefik.http.routers.portainer.tls.certresolver=coldbornresolver
       - traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN:-coldborn.localhost}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.portainer.entrypoints=https
@@ -152,14 +94,14 @@ services:
       - traefik.http.services.portainer.loadbalancer.server.port=9443
     networks:
       infra_network:
-        ipv4_address: 173.20.0.3
+        ipv4_address: 173.20.0.4
         aliases:
           - portainer.${DOMAIN:-coldborn.localhost}
   # sudo -u www-data php occ config:system:set --value 0 remember_login_cookie_lifetime
   cloud:
     image: docker.io/nextcloud:latest
-    hostname: cloud.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_cloud
+    hostname: cloud.hostname.${DOMAIN:-coldborn.localhost}
+    container_name: ${PREFIX}_cloud
     platform: linux/x86_64
     depends_on:
       - "redis"
@@ -171,7 +113,7 @@ services:
       - ${DATA_DIR}/cloud/var/www/html/data:/var/www/html/data
     labels:
       - traefik.enable=true
-#      - traefik.http.routers.cloud.tls.certresolver=coldbornresolver
+      - traefik.http.routers.cloud.tls.certresolver=coldbornresolver
       - traefik.http.routers.cloud.rule=Host(`cloud.${DOMAIN:-coldborn.localhost}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.cloud.entrypoints=https
@@ -199,16 +141,16 @@ services:
 
     networks:
       infra_network:
-        ipv4_address: 173.20.0.4
+        ipv4_address: 173.20.0.5
         aliases:
-          - cloud.${DOMAIN:-coldborn.localhost}
+          - cloud.alias.${DOMAIN:-coldborn.localhost}
 
   gitlab:
     # Deactivate session by userid 34
     # gitlab-redis-cli DEL "session:gitlab:2::$( gitlab-redis-cli --scan --pattern 'session:user:gitlab:34:*' | cut -d':' -f7 )"
     image: docker.io/gitlab/gitlab-ce:latest
     hostname: gitlab.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_gitlab
+    container_name: ${PREFIX}_gitlab
     platform: linux/x86_64
     shm_size: 1GB
     depends_on:
@@ -221,7 +163,7 @@ services:
       - ${DATA_DIR}/gitlab/var/opt/gitlab:/var/opt/gitlab
     labels:
       - traefik.enable=true
-#      - traefik.http.routers.gitlab.tls.certresolver=coldbornresolver
+      - traefik.http.routers.gitlab.tls.certresolver=coldbornresolver
       - traefik.http.routers.gitlab.rule=Host(`gitlab.${DOMAIN:-coldborn.localhost}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.gitlab.entrypoints=https
@@ -286,35 +228,20 @@ services:
         }
     networks:
       infra_network:
-        ipv4_address: 173.20.0.5
+        ipv4_address: 173.20.0.6
         aliases:
           - gitlab.${DOMAIN:-coldborn.localhost}
-
-  # gitlabrunner:
-  #   image: gitlab/gitlab-runner:latest
-  #   hostname: gitlabrunner.${DOMAIN:-coldborn.localhost}
-  #   container_name: ${PREFIX:-nk_}_service_gitlabrunner
-  #   platform: linux/x86_64
-  #   restart: always
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - ${DATA_DIR}/gitlabrunner/etc/gitlab-runner:/etc/gitlab-runner
-  #   networks:
-  #     infra_network:
-  #       ipv4_address: 173.20.0.51
-  #       aliases:
-  #         - gitlabrunner.${DOMAIN:-coldborn.localhost}
 
   grafana:
     image: docker.io/grafana/grafana-oss:latest
     hostname: grafana.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_grafana
+    container_name: ${PREFIX}_grafana
     platform: linux/x86_64
     # volumes:
     #   - ./grafana/grafana/var/lib/grafana:/var/lib/grafana
     labels:
       - traefik.enable=true
-#      - traefik.http.routers.grafana.tls.certresolver=coldbornresolver
+      - traefik.http.routers.grafana.tls.certresolver=coldbornresolver
       - traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN:-coldborn.localhost}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.grafana.entrypoints=https
@@ -322,14 +249,14 @@ services:
       - traefik.http.services.grafana.loadbalancer.server.port=3000
     networks:
       infra_network:
-        ipv4_address: 173.20.0.6
+        ipv4_address: 173.20.0.7
         aliases:
           - grafana.${DOMAIN:-coldborn.localhost}
 
   node-exporter:
     image: prom/node-exporter:latest
     hostname: nodeexporter.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_node_exporter
+    container_name: ${PREFIX}_node_exporter
     platform: linux/x86_64
     restart: unless-stopped
     volumes:
@@ -343,14 +270,14 @@ services:
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
     networks:
       infra_network:
-        ipv4_address: 173.20.0.7
+        ipv4_address: 173.20.0.8
         aliases:
           - nodeexporter.${DOMAIN:-coldborn.localhost}
 
   prometheus:
     image: prom/prometheus:latest
     hostname: prometheus.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_prometheus
+    container_name: ${PREFIX}_prometheus
     platform: linux/x86_64
     restart: unless-stopped
     volumes:
@@ -364,14 +291,14 @@ services:
       --web.enable-lifecycle
     networks:
       infra_network:
-        ipv4_address: 173.20.0.8
+        ipv4_address: 173.20.0.9
         aliases:
           - prometheus.${DOMAIN:-coldborn.localhost}
 
   redis:
     image: redis:latest
     hostname: redis.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_redis
+    container_name: ${PREFIX}_redis
     platform: linux/x86_64
     restart: unless-stopped
     healthcheck:
@@ -380,14 +307,14 @@ services:
       - ${DATA_DIR}/redis/usr/local/etc/redis:/usr/local/etc/redis
     networks:
       infra_network:
-        ipv4_address: 173.20.0.9
+        ipv4_address: 173.20.0.10
         aliases:
           - redis.${DOMAIN:-coldborn.localhost}
 
   redisinsight:
     image: redislabs/redisinsight:latest
     hostname: redisinsight.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_redisinsight
+    container_name: ${PREFIX}_redisinsight
     platform: linux/x86_64
     restart: unless-stopped
     depends_on:
@@ -397,7 +324,7 @@ services:
       - RITRUSTEDORIGINS=https://redisinsight.${DOMAIN:-coldborn.localhost}
     labels:
       - traefik.enable=true
-#      - traefik.http.routers.redisinsight.tls.certresolver=coldbornresolver
+      - traefik.http.routers.redisinsight.tls.certresolver=coldbornresolver
       - traefik.http.routers.redisinsight.rule=Host(`redisinsight.${DOMAIN:-coldborn.localhost}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.redisinsight.entrypoints=https
@@ -406,13 +333,13 @@ services:
 
     networks:
       infra_network:
-        ipv4_address: 173.20.1.9
+        ipv4_address: 173.20.0.11
         aliases:
           - redisinsight.${DOMAIN:-coldborn.localhost}
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
-    container_name: ${PREFIX:-nk_}_cadvisor
+    container_name: ${PREFIX}_cadvisor
     platform: linux/x86_64
     #ports:
       #- 8080:8080
@@ -423,18 +350,18 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
     networks:
       infra_network:
-        ipv4_address: 173.20.0.10
+        ipv4_address: 173.20.0.12
         aliases:
           - cadvisor.${DOMAIN:-coldborn.localhost}
 
   gotify:
     image: gotify/server
-    container_name: ${PREFIX:-nk_}_gotify
+    container_name: ${PREFIX}_gotify
     hostname: gotify.${DOMAIN:-coldborn.localhost}
     platform: linux/x86_64
     labels:
       - traefik.enable=true
-#      - traefik.http.routers.gotify.tls.certresolver=coldbornresolver
+      - traefik.http.routers.gotify.tls.certresolver=coldbornresolver
       - traefik.http.routers.gotify.rule=Host(`gotify.${DOMAIN:-coldborn.localhost}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.gotify.entrypoints=https
@@ -442,7 +369,7 @@ services:
       - traefik.http.services.gotify.loadbalancer.server.port=80
     networks:
       infra_network:
-        ipv4_address: 173.20.0.11
+        ipv4_address: 173.20.0.13
         aliases:
           - gotify.${DOMAIN:-coldborn.localhost}
 
@@ -456,10 +383,10 @@ services:
     image: mariadb:latest
     restart: always
     hostname: mariadb.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_service_mariadb
+    container_name: ${PREFIX}_mariadb
     platform: linux/x86_64
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      test: ["CMD", "mysqladmin", "ping", "--silent","-p${MARIADB_ROOT_PASSWORD}"]
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
@@ -469,7 +396,7 @@ services:
       - ${DATA_DIR}/mariadb/etc/mysql/conf.d:/etc/mysql/conf.d
     networks:
       infra_network:
-        ipv4_address: 173.20.0.13
+        ipv4_address: 173.20.0.14
         aliases:
           - mariadb.${DOMAIN:-coldborn.localhost}
 
@@ -477,7 +404,7 @@ services:
     image: mariadb/maxscale:latest
     restart: always
     hostname: maxscale.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_web_maxscale
+    container_name: ${PREFIX}_maxscale
     platform: linux/x86_64
     labels:
       - traefik.enable=true
@@ -490,7 +417,7 @@ services:
       - traefik.http.services.maxscale.loadbalancer.server.port=8989
     networks:
       infra_network:
-        ipv4_address: 173.20.0.14
+        ipv4_address: 173.20.0.15
         aliases:
           - maxscale.${DOMAIN:-coldborn.localhost}
 
@@ -498,7 +425,7 @@ services:
     image: freeipa/freeipa-server:fedora-37
     restart: always
     hostname: freeipaserver.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_web_freeipaserver
+    container_name: ${PREFIX}_freeipaserver
     platform: linux/x86_64
     privileged: true
     volumes:
@@ -517,6 +444,7 @@ services:
       - net.ipv6.conf.all.disable_ipv6=0
     labels:
       - traefik.enable=true
+      - traefik.http.routers.freeipaserver.tls.certresolver=coldbornresolver
       - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.${DOMAIN:-coldborn.localhost}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.freeipaserver.entrypoints=https
@@ -526,35 +454,15 @@ services:
       - traefik.http.services.freeipaserver.loadbalancer.server.port=443
     networks:
       infra_network:
-        ipv4_address: 173.20.0.15
+        ipv4_address: 173.20.0.16
         aliases:
           - freeipaserver.${DOMAIN:-coldborn.localhost}
 
-  swaggerui:
-    image: swaggerapi/swagger-ui:latest
-    restart: always
-    hostname: swaggerui.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_web_swaggerui
-    platform: linux/x86_64
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.swaggerui.rule=Host(`swaggerui.${DOMAIN:-coldborn.localhost}`)
-      - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
-      - traefik.http.routers.swaggerui.entrypoints=https
-      - traefik.http.routers.swaggerui.tls=true
-      - traefik.http.services.swaggerui.loadbalancer.passhostheader=true
-      - traefik.http.services.swaggerui.loadbalancer.server.scheme=http
-      - traefik.http.services.swaggerui.loadbalancer.server.port=8080
-    networks:
-      infra_network:
-        ipv4_address: 173.20.0.16
-        aliases:
-          - swaggerui.${DOMAIN:-coldborn.localhost}
   whoami:
     image: traefik/whoami
     restart: always
     hostname: whoami.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX}_web_whoami
+    container_name: ${PREFIX}_whoami
     platform: linux/x86_64
     labels:
       - traefik.enable=true
@@ -571,13 +479,12 @@ services:
         aliases:
           - whoami.${DOMAIN:-coldborn.localhost}
 
-
   project:
     build:
       context: "./resources/project"
     restart: always
     hostname: project.${DOMAIN:-coldborn.localhost}
-    container_name: ${PREFIX:-nk_}_web_project
+    container_name: ${PREFIX}_project
     platform: linux/x86_64
     volumes:
       - ${DATA_DIR}/project/project:/project
