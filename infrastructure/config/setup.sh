@@ -27,6 +27,7 @@ setup_freeipa () {
        ipa group-add-member ${LDAP_GROUP_GITLAB}    --users=${DEMO_USER}
        ipa group-add-member ${LDAP_GROUP_API_WRITE} --users=${DEMO_USER}
        ipa group-add-member ${LDAP_GROUP_API_READ}  --users=${DEMO_USER}
+       ipa group-add-member ${LDAP_GROUP_GRAFANA}   --users=${DEMO_USER}
     "
 }
 
@@ -84,11 +85,25 @@ setup_cloud () {
             contacts \\
             forms \\
             mail \\
-            weather \\
+            weather_status \\
             dashboard \\
             tasks \\
             files_pdfviewer \\
-            richdocuments
+            richdocuments \\
+            bruteforcesettings \\
+            files_external \\
+            twofactor_totp \\
+            admin_audit \\
+            cospend \\
+            announcementcenter \\
+            files_accesscontrol \\
+            files_automatedtagging \\
+            groupfolders \\
+            maps \\
+            notes \\
+            files_retention \\
+            twofactor_webauthn \\
+            externalportal
     "
 }
 
