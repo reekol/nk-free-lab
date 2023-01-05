@@ -20,9 +20,9 @@ services:
       --log
       --accesslog
       --serverstransport.insecureskipverify=true
-#      --certificatesresolvers.coldbornresolver.acme.tlschallenge=true
-#      --certificatesresolvers.coldbornresolver.acme.email=cupuyc@gmail.com
-#      --certificatesresolvers.coldbornresolver.acme.storage=/letsencrypt/acme.json
+#      --certificatesresolvers.${PREFIX}_resolver.acme.tlschallenge=true
+#      --certificatesresolvers.${PREFIX}_resolver.acme.email=${LETSENCRYPT_ACC_EMAIL}
+#      --certificatesresolvers.${PREFIX}_resolver.acme.storage=/letsencrypt/acme.json
     ports:
       - target: 443
         published: 443
@@ -31,8 +31,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DATA_DIR}/traefik/letsencrypt:/letsencrypt
     labels:
-      - traefik.http.routers.traefik.tls.certresolver=coldbornresolver
-      - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.routers.traefik.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)
       - traefik.http.routers.traefik.entrypoints=https
       - traefik.http.routers.traefik.tls=true
       - traefik.http.routers.traefik.service=api@internal
@@ -42,12 +42,12 @@ services:
       infra_network:
         ipv4_address: 173.20.0.2
         aliases:
-          - traefik.${DOMAIN:-coldborn.localhost}
+          - traefik.${DOMAIN}
           - cloud.traefik
 
   setupc:
     image: alpine:latest
-    hostname: setupc.${DOMAIN:-coldborn.localhost}
+    hostname: setupc.${DOMAIN}
     container_name: ${PREFIX}_setupc
     platform: linux/x86_64
     restart: "no"
@@ -58,7 +58,7 @@ services:
         sh -c "apk add bash docker
         && touch /entrypoint.log
         && docker container exec ${PREFIX}_cloud /bin/bash -c '\
-            echo \"173.20.0.2      cloud.${DOMAIN:-coldborn.localhost}\" >> /etc/hosts
+            echo \"173.20.0.2      cloud.${DOMAIN}\" >> /etc/hosts
             echo 'Done'
           '
           tail -F /entrypoint.log
@@ -69,11 +69,11 @@ services:
       infra_network:
         ipv4_address: 173.20.0.3
         aliases:
-          - setupc.${DOMAIN:-coldborn.localhost}
+          - setupc.${DOMAIN}
 
   portainer:
     image: docker.io/portainer/portainer-ce:latest
-    hostname: portainer.${DOMAIN:-coldborn.localhost}
+    hostname: portainer.${DOMAIN}
     container_name: ${PREFIX}_portainer
     platform: linux/x86_64
     command:
@@ -84,8 +84,8 @@ services:
     restart: always
     labels:
       - traefik.enable=true
-      - traefik.http.routers.portainer.tls.certresolver=coldbornresolver
-      - traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.routers.portainer.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.portainer.entrypoints=https
       - traefik.http.routers.portainer.tls=true
@@ -96,11 +96,11 @@ services:
       infra_network:
         ipv4_address: 173.20.0.4
         aliases:
-          - portainer.${DOMAIN:-coldborn.localhost}
+          - portainer.${DOMAIN}
   # sudo -u www-data php occ config:system:set --value 0 remember_login_cookie_lifetime
   cloud:
     image: docker.io/nextcloud:latest
-    hostname: cloud.hostname.${DOMAIN:-coldborn.localhost}
+    hostname: cloud.hostname.${DOMAIN}
     container_name: ${PREFIX}_cloud
     platform: linux/x86_64
     depends_on:
@@ -113,8 +113,8 @@ services:
       - ${DATA_DIR}/cloud/var/www/html/data:/var/www/html/data
     labels:
       - traefik.enable=true
-      - traefik.http.routers.cloud.tls.certresolver=coldbornresolver
-      - traefik.http.routers.cloud.rule=Host(`cloud.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.routers.cloud.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.cloud.rule=Host(`cloud.${DOMAIN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.cloud.entrypoints=https
       - traefik.http.routers.cloud.tls=true
@@ -132,8 +132,8 @@ services:
 
     environment:
       - OVERWRITEPROTOCOL=https
-      - REDIS_HOST=redis.${DOMAIN:-coldborn.localhost}
-      - NEXTCLOUD_TRUSTED_DOMAINS=cloud.${DOMAIN:-coldborn.localhost}
+      - REDIS_HOST=redis.${DOMAIN}
+      - NEXTCLOUD_TRUSTED_DOMAINS=cloud.${DOMAIN}
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
       - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
       - PHP_MEMORY_LIMIT=${NEXTCLOUD_PHP_MEMORY_LIMIT}
@@ -143,13 +143,13 @@ services:
       infra_network:
         ipv4_address: 173.20.0.5
         aliases:
-          - cloud.alias.${DOMAIN:-coldborn.localhost}
+          - cloud.alias.${DOMAIN}
 
   gitlab:
     # Deactivate session by userid 34
     # gitlab-redis-cli DEL "session:gitlab:2::$( gitlab-redis-cli --scan --pattern 'session:user:gitlab:34:*' | cut -d':' -f7 )"
     image: docker.io/gitlab/gitlab-ce:latest
-    hostname: gitlab.${DOMAIN:-coldborn.localhost}
+    hostname: gitlab.${DOMAIN}
     container_name: ${PREFIX}_gitlab
     platform: linux/x86_64
     shm_size: 1GB
@@ -163,8 +163,8 @@ services:
       - ${DATA_DIR}/gitlab/var/opt/gitlab:/var/opt/gitlab
     labels:
       - traefik.enable=true
-      - traefik.http.routers.gitlab.tls.certresolver=coldbornresolver
-      - traefik.http.routers.gitlab.rule=Host(`gitlab.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.routers.gitlab.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.gitlab.rule=Host(`gitlab.${DOMAIN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.gitlab.entrypoints=https
       - traefik.http.routers.gitlab.tls=true
@@ -172,7 +172,7 @@ services:
       - traefik.http.services.gitlab.loadbalancer.server.port=80
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'https://gitlab.${DOMAIN:-coldborn.localhost}'
+        external_url 'https://gitlab.${DOMAIN}'
         nginx['listen_https'] = false
         nginx['listen_port'] = 80
         gitlab_rails['initial_root_password'] = "${GITLAB_ROOT_PASSWORD}"
@@ -186,7 +186,7 @@ services:
         redis['enable'] = false
 
         # Redis via TCP
-        gitlab_rails['redis_host'] = 'redis.${DOMAIN:-coldborn.localhost}'
+        gitlab_rails['redis_host'] = 'redis.${DOMAIN}'
         gitlab_rails['redis_port'] = 6379
 
         # Ldap
@@ -197,7 +197,7 @@ services:
         gitlab_rails['ldap_servers'] = {
           'main' => {
             'label' => '${LDAP_GITLAB_SERVER_NAME}',
-            'host' =>  'freeipaserver.${DOMAIN:-coldborn.localhost}',
+            'host' =>  'freeipaserver.${DOMAIN}',
             'port' => 636,
             'uid' => 'uid',
             'encryption' => 'simple_tls',
@@ -230,19 +230,19 @@ services:
       infra_network:
         ipv4_address: 173.20.0.6
         aliases:
-          - gitlab.${DOMAIN:-coldborn.localhost}
+          - gitlab.${DOMAIN}
 
   grafana:
     image: docker.io/grafana/grafana-oss:latest
-    hostname: grafana.${DOMAIN:-coldborn.localhost}
+    hostname: grafana.${DOMAIN}
     container_name: ${PREFIX}_grafana
     platform: linux/x86_64
     # volumes:
     #   - ./grafana/grafana/var/lib/grafana:/var/lib/grafana
     labels:
       - traefik.enable=true
-      - traefik.http.routers.grafana.tls.certresolver=coldbornresolver
-      - traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.routers.grafana.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.grafana.entrypoints=https
       - traefik.http.routers.grafana.tls=true
@@ -251,11 +251,11 @@ services:
       infra_network:
         ipv4_address: 173.20.0.7
         aliases:
-          - grafana.${DOMAIN:-coldborn.localhost}
+          - grafana.${DOMAIN}
 
   node-exporter:
     image: prom/node-exporter:latest
-    hostname: nodeexporter.${DOMAIN:-coldborn.localhost}
+    hostname: nodeexporter.${DOMAIN}
     container_name: ${PREFIX}_node_exporter
     platform: linux/x86_64
     restart: unless-stopped
@@ -272,11 +272,11 @@ services:
       infra_network:
         ipv4_address: 173.20.0.8
         aliases:
-          - nodeexporter.${DOMAIN:-coldborn.localhost}
+          - nodeexporter.${DOMAIN}
 
   prometheus:
     image: prom/prometheus:latest
-    hostname: prometheus.${DOMAIN:-coldborn.localhost}
+    hostname: prometheus.${DOMAIN}
     container_name: ${PREFIX}_prometheus
     platform: linux/x86_64
     restart: unless-stopped
@@ -293,11 +293,11 @@ services:
       infra_network:
         ipv4_address: 173.20.0.9
         aliases:
-          - prometheus.${DOMAIN:-coldborn.localhost}
+          - prometheus.${DOMAIN}
 
   redis:
     image: redis:latest
-    hostname: redis.${DOMAIN:-coldborn.localhost}
+    hostname: redis.${DOMAIN}
     container_name: ${PREFIX}_redis
     platform: linux/x86_64
     restart: unless-stopped
@@ -309,11 +309,11 @@ services:
       infra_network:
         ipv4_address: 173.20.0.10
         aliases:
-          - redis.${DOMAIN:-coldborn.localhost}
+          - redis.${DOMAIN}
 
   redisinsight:
     image: redislabs/redisinsight:latest
-    hostname: redisinsight.${DOMAIN:-coldborn.localhost}
+    hostname: redisinsight.${DOMAIN}
     container_name: ${PREFIX}_redisinsight
     platform: linux/x86_64
     restart: unless-stopped
@@ -321,11 +321,11 @@ services:
       - "redis"
     environment:
       - RIPROXYENABLE=true
-      - RITRUSTEDORIGINS=https://redisinsight.${DOMAIN:-coldborn.localhost}
+      - RITRUSTEDORIGINS=https://redisinsight.${DOMAIN}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.redisinsight.tls.certresolver=coldbornresolver
-      - traefik.http.routers.redisinsight.rule=Host(`redisinsight.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.routers.redisinsight.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.redisinsight.rule=Host(`redisinsight.${DOMAIN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.redisinsight.entrypoints=https
       - traefik.http.routers.redisinsight.tls=true
@@ -335,7 +335,7 @@ services:
       infra_network:
         ipv4_address: 173.20.0.11
         aliases:
-          - redisinsight.${DOMAIN:-coldborn.localhost}
+          - redisinsight.${DOMAIN}
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -352,17 +352,17 @@ services:
       infra_network:
         ipv4_address: 173.20.0.12
         aliases:
-          - cadvisor.${DOMAIN:-coldborn.localhost}
+          - cadvisor.${DOMAIN}
 
   gotify:
     image: gotify/server
     container_name: ${PREFIX}_gotify
-    hostname: gotify.${DOMAIN:-coldborn.localhost}
+    hostname: gotify.${DOMAIN}
     platform: linux/x86_64
     labels:
       - traefik.enable=true
-      - traefik.http.routers.gotify.tls.certresolver=coldbornresolver
-      - traefik.http.routers.gotify.rule=Host(`gotify.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.routers.gotify.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.gotify.rule=Host(`gotify.${DOMAIN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.gotify.entrypoints=https
       - traefik.http.routers.gotify.tls=true
@@ -371,7 +371,7 @@ services:
       infra_network:
         ipv4_address: 173.20.0.13
         aliases:
-          - gotify.${DOMAIN:-coldborn.localhost}
+          - gotify.${DOMAIN}
 
   mariadb:
     # Prepare backup
@@ -382,7 +382,7 @@ services:
 
     image: mariadb:latest
     restart: always
-    hostname: mariadb.${DOMAIN:-coldborn.localhost}
+    hostname: mariadb.${DOMAIN}
     container_name: ${PREFIX}_mariadb
     platform: linux/x86_64
     healthcheck:
@@ -398,17 +398,17 @@ services:
       infra_network:
         ipv4_address: 173.20.0.14
         aliases:
-          - mariadb.${DOMAIN:-coldborn.localhost}
+          - mariadb.${DOMAIN}
 
   maxscale:
     image: mariadb/maxscale:latest
     restart: always
-    hostname: maxscale.${DOMAIN:-coldborn.localhost}
+    hostname: maxscale.${DOMAIN}
     container_name: ${PREFIX}_maxscale
     platform: linux/x86_64
     labels:
       - traefik.enable=true
-      - traefik.http.routers.maxscale.rule=Host(`maxscale.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.routers.maxscale.rule=Host(`maxscale.${DOMAIN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.maxscale.entrypoints=https
       - traefik.http.routers.maxscale.tls=true
@@ -419,12 +419,12 @@ services:
       infra_network:
         ipv4_address: 173.20.0.15
         aliases:
-          - maxscale.${DOMAIN:-coldborn.localhost}
+          - maxscale.${DOMAIN}
 
   freeipaserver: #kinit && ipa
     image: freeipa/freeipa-server:fedora-37
     restart: always
-    hostname: freeipaserver.${DOMAIN:-coldborn.localhost}
+    hostname: freeipaserver.${DOMAIN}
     container_name: ${PREFIX}_freeipaserver
     platform: linux/x86_64
     privileged: true
@@ -434,18 +434,18 @@ services:
     command:
       --no-ntp
     environment:
-      - IPA_SERVER_HOSTNAME=freeipaserver.${DOMAIN:-coldborn.localhost}
-      - IPA_SERVER_INSTALL_OPTS=-U -r ${DOMAIN:-coldborn.localhost}
+      - IPA_SERVER_HOSTNAME=freeipaserver.${DOMAIN}
+      - IPA_SERVER_INSTALL_OPTS=-U -r ${DOMAIN}
       - PASSWORD=${FREEIPASERVER_ADMIN_PASSWORD} # at least 8 characters
       - VIRTUAL_PROTO=https
-      - VIRTUAL_HOST=freeipaserver.${DOMAIN:-coldborn.localhost}
+      - VIRTUAL_HOST=freeipaserver.${DOMAIN}
       - VIRTUAL_PORT=443
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
     labels:
       - traefik.enable=true
-      - traefik.http.routers.freeipaserver.tls.certresolver=coldbornresolver
-      - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.routers.freeipaserver.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.${DOMAIN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.freeipaserver.entrypoints=https
       - traefik.http.routers.freeipaserver.tls=true
@@ -456,17 +456,17 @@ services:
       infra_network:
         ipv4_address: 173.20.0.16
         aliases:
-          - freeipaserver.${DOMAIN:-coldborn.localhost}
+          - freeipaserver.${DOMAIN}
 
   whoami:
     image: traefik/whoami
     restart: always
-    hostname: whoami.${DOMAIN:-coldborn.localhost}
+    hostname: whoami.${DOMAIN}
     container_name: ${PREFIX}_whoami
     platform: linux/x86_64
     labels:
       - traefik.enable=true
-      - traefik.http.routers.whoami.rule=Host(`whoami.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.routers.whoami.rule=Host(`whoami.${DOMAIN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.whoami.entrypoints=https
       - traefik.http.routers.whoami.tls=true
@@ -477,13 +477,13 @@ services:
       infra_network:
         ipv4_address: 173.20.0.17
         aliases:
-          - whoami.${DOMAIN:-coldborn.localhost}
+          - whoami.${DOMAIN}
 
   project:
     build:
       context: "./resources/project"
     restart: always
-    hostname: project.${DOMAIN:-coldborn.localhost}
+    hostname: project.${DOMAIN}
     container_name: ${PREFIX}_project
     platform: linux/x86_64
     volumes:
@@ -500,7 +500,7 @@ services:
       - LDAP_APACHE_AuthLDAPBindPassword=${LDAP_APACHE_AuthLDAPBindPassword}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.project.rule=Host(`project.${DOMAIN:-coldborn.localhost}`,`api.${DOMAIN:-coldborn.localhost}`)
+      - traefik.http.routers.project.rule=Host(`project.${DOMAIN}`,`api.${DOMAIN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.project.entrypoints=https
       - traefik.http.routers.project.tls=true
@@ -511,7 +511,7 @@ services:
       infra_network:
         ipv4_address: 173.20.0.18
         aliases:
-          - project.${DOMAIN:-coldborn.localhost}
+          - project.${DOMAIN}
 
 networks:
   infra_network:

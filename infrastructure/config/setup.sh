@@ -1,22 +1,25 @@
 source .env.dev
 
 setup_freeipa () {
-    docker container exec ${PREFIX}_web_freeipaserver /bin/bash -c "echo ${FREEIPASERVER_ADMIN_PASSWORD} | kinit"
-    docker container exec ${PREFIX}_web_freeipaserver /bin/bash -c "
+    docker container exec ${PREFIX}_freeipaserver /bin/bash -c "echo ${FREEIPASERVER_ADMIN_PASSWORD} | kinit"
+    docker container exec ${PREFIX}_freeipaserver /bin/bash -c "
         ipa  group-add ${LDAP_GROUP_DEFAULT}    --gid 1
         ipa  group-add ${LDAP_GROUP_SERVICES}   --gid 2
         ipa  group-add ${LDAP_GROUP_CLOUD}      --gid 3
         ipa  group-add ${LDAP_GROUP_GITLAB}     --gid 4
         ipa  group-add ${LDAP_GROUP_API_WRITE}  --gid 5
         ipa  group-add ${LDAP_GROUP_API_READ}   --gid 6
+        ipa  group-add ${LDAP_GROUP_GRAFANA}    --gid 7
 
-        echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_GITLAB} --first=Bind --last=Gitlab  --password --gidnumber=2 --noprivate
-        echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_CLOUD}  --first=Bind --last=Cloud   --password --gidnumber=2 --noprivate
-        echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_APACHE} --first=Bind --last=Apache  --password --gidnumber=2 --noprivate
+        echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_GITLAB}   --first=Bind --last=Gitlab  --password --gidnumber=2 --noprivate
+        echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_CLOUD}    --first=Bind --last=Cloud   --password --gidnumber=2 --noprivate
+        echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_APACHE}   --first=Bind --last=Apache  --password --gidnumber=2 --noprivate
+        echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_GRAFANA}  --first=Bind --last=Grafana --password --gidnumber=2 --noprivate
 
         ipa group-add-member ${LDAP_GROUP_SERVICES} \
-            --users=${LDAP_USER_SERVICE_GITLAB} \
-            --users=${LDAP_USER_SERVICE_CLOUD} \
+            --users=${LDAP_USER_SERVICE_GITLAB}     \
+            --users=${LDAP_USER_SERVICE_CLOUD}      \
+            --users=${LDAP_USER_SERVICE_GRAFANA}    \
             --users=${LDAP_USER_SERVICE_APACHE}
 
        echo ${DEMO_PASS} | ipa user-add ${DEMO_USER} --first=Demo --last=User  --password --gidnumber=2 --noprivate
@@ -89,5 +92,10 @@ setup_cloud () {
     "
 }
 
+setup_grafana () {
+  echo ""
+}
+
 setup_freeipa
 setup_cloud
+setup_grafana
