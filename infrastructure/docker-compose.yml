@@ -51,11 +51,17 @@ services:
     container_name: ${PREFIX}_setupc
     platform: linux/x86_64
     restart: "no"
+    cap_add:
+     - NET_ADMIN
     depends_on:
       - "mariadb"
       - "cloud"
     command: >
-        sh -c "apk add bash docker
+        sh -c "apk add bash docker openssl openvpn easy-rsa
+        && /usr/share/easy-rsa/easyrsa --batch init-pki
+        && /usr/share/easy-rsa/easyrsa --batch build-server-full  vpn.${DOMAIN}   nopass
+        && /usr/share/easy-rsa/easyrsa --batch build-client-full  ${MASTER_USER}  nopass
+        && /usr/share/easy-rsa/easyrsa --batch build-client-full  ${DEMO_USER}    nopass
         && touch /entrypoint.log
         && docker container exec ${PREFIX}_cloud /bin/bash -c '\
             echo \"173.20.0.2      cloud.${DOMAIN}\" >> /etc/hosts
@@ -237,8 +243,6 @@ services:
     hostname: grafana.${DOMAIN}
     container_name: ${PREFIX}_grafana
     platform: linux/x86_64
-    # volumes:
-    #   - ./grafana/grafana/var/lib/grafana:/var/lib/grafana
     labels:
       - traefik.enable=true
       - traefik.http.routers.grafana.tls.certresolver=${PREFIX}_resolver
