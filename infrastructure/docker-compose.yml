@@ -60,14 +60,16 @@ services:
     depends_on:
       - "mariadb"
       - "cloud"
+    ports:
+      - "1194:1194/udp"
     command: >
         sh -c "apk add --update bash docker bind-tools iptables openssl openvpn openvpn-auth-ldap easy-rsa
         && /usr/share/easy-rsa/easyrsa --batch init-pki
         && /usr/share/easy-rsa/easyrsa --batch build-ca nopass
+        && /usr/share/easy-rsa/easyrsa --batch gen-dh
         && /usr/share/easy-rsa/easyrsa --batch build-server-full  vpn.${DOMAIN}   nopass
         && /usr/share/easy-rsa/easyrsa --batch build-client-full  ${MASTER_USER}  nopass
         && /usr/share/easy-rsa/easyrsa --batch build-client-full  ${DEMO_USER}    nopass
-        && openssl dhparam -out /pki/dh.pem 2048
         && mkdir -p /dev/net
         && mknod /dev/net/tun c 10 200
         && MY_IP=\$(dig +short ${DOMAIN})
@@ -78,7 +80,9 @@ services:
         && iptables -A FORWARD -i eth0 -o tun+ -m state --state RELATED,ESTABLISHED -j ACCEPT
         && iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
         && iptables -A OUTPUT -o tun+ -j ACCEPT
-        && openvpn  --dh /pki/dh.pem --tls-server --dev tun0 --ca /pki/ca.crt --cert /pki/private/root.key --key /pki/private/ca.key
+        && openvpn  --dev tun0 --daemon
+        && sleep 1
+        && ifconfig tun0 up
         && touch /entrypoint.log
         && docker container exec ${PREFIX}_cloud /bin/bash -c '\
             echo \"173.20.0.2      cloud.${DOMAIN}\" >> /etc/hosts
