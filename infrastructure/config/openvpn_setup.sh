@@ -1,8 +1,10 @@
 source .env.dev
 
+CONTAINER=${PREFIX}_vpn
+
 openvpn_setup_vpn () {
 
-  docker container exec ${PREFIX}_setupc /bin/sh -c "
+  docker container exec ${CONTAINER} /bin/sh -c "
     apk add bind-tools iptables openssl openvpn openvpn-auth-ldap easy-rsa
 
     mkdir -p /dev/net
@@ -25,7 +27,7 @@ openvpn_setup_vpn () {
 }
 
 openvpn_start_vpn () {
-  docker container exec ${PREFIX}_setupc /bin/sh -c "
+  docker container exec ${CONTAINER} /bin/sh -c "
     openvpn  --dev tun0 --daemon
     sleep 1
     ifconfig tun0 up"
@@ -35,7 +37,7 @@ openvpn_setup_client () {
 
   local MY_IP=$(dig +short ${DOMAIN})
 
-  docker container exec ${PREFIX}_setupc /bin/sh -c "/usr/share/easy-rsa/easyrsa --batch build-client-full  ${1}  nopass"
+  docker container exec ${CONTAINER} /bin/sh -c "/usr/share/easy-rsa/easyrsa --batch build-client-full  ${1}  nopass"
 
   echo "################ START ${1}.ovpn ################"
   echo "client"
@@ -53,16 +55,16 @@ openvpn_setup_client () {
   echo "block-outside-dns"
   echo "verb 3"
   echo "<dh>"
-  docker container exec ${PREFIX}_setupc /bin/sh -c "cat /pki/dh.pem"
+  docker container exec ${CONTAINER} /bin/sh -c "cat /pki/dh.pem"
   echo "</dh>"
   echo "<ca>"
-  docker container exec ${PREFIX}_setupc /bin/sh -c "cat /pki/ca.crt"
+  docker container exec ${CONTAINER} /bin/sh -c "cat /pki/ca.crt"
   echo "</ca>"
   echo "<cert>"
-  docker container exec ${PREFIX}_setupc /bin/sh -c "cat /pki/issued/${1}.crt"
+  docker container exec ${CONTAINER} /bin/sh -c "cat /pki/issued/${1}.crt"
   echo "</cert>"
   echo "<key>"
-  docker container exec ${PREFIX}_setupc /bin/sh -c "cat /pki/private/${1}.key"
+  docker container exec ${CONTAINER} /bin/sh -c "cat /pki/private/${1}.key"
   echo "</key>"
   echo "################ END ${1}.ovpn ################"
 

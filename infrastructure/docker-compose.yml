@@ -47,8 +47,36 @@ services:
 
   setupc:
     image: docker:latest
-    hostname: setupc.${DOMAIN}
+    hostname: setupc.hostname.${DOMAIN}
     container_name: ${PREFIX}_setupc
+    platform: linux/x86_64
+    restart: "no"
+    cap_add:
+     - NET_ADMIN
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv6.conf.all.forwarding=1
+      - net.ipv6.conf.default.forwarding=1
+    depends_on:
+      - "mariadb"
+      - "cloud"
+    command: >
+        sh -c "
+          docker container exec ${PREFIX}_cloud /bin/bash -c 'echo \"173.20.0.2      cloud.${DOMAIN}\" >> /etc/hosts'
+          touch /l.og && tail -F /l.og
+        "
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      infra_network:
+        ipv4_address: 173.20.0.3
+        aliases:
+          - setupc.${DOMAIN}
+
+  vpn:
+    image: alpine:latest
+    hostname: vpn.hostname.${DOMAIN}
+    container_name: ${PREFIX}_vpn
     platform: linux/x86_64
     restart: "no"
     cap_add:
@@ -64,20 +92,19 @@ services:
       - "1194:1194/udp"
     command: >
         sh -c "
-          docker container exec ${PREFIX}_cloud /bin/bash -c 'echo \"173.20.0.2      cloud.${DOMAIN}\" >> /etc/hosts'
           touch /l.og && tail -F /l.og
         "
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       infra_network:
-        ipv4_address: 173.20.0.3
+        ipv4_address: 173.20.0.4
         aliases:
-          - setupc.${DOMAIN}
+          - vpn.${DOMAIN}
 
   portainer:
     image: docker.io/portainer/portainer-ce:latest
-    hostname: portainer.${DOMAIN}
+    hostname: portainer.hostname.${DOMAIN}
     container_name: ${PREFIX}_portainer
     platform: linux/x86_64
     command:
@@ -98,7 +125,7 @@ services:
       - traefik.http.services.portainer.loadbalancer.server.port=9443
     networks:
       infra_network:
-        ipv4_address: 173.20.0.4
+        ipv4_address: 173.20.0.5
         aliases:
           - portainer.${DOMAIN}
   # sudo -u www-data php occ config:system:set --value 0 remember_login_cookie_lifetime
@@ -145,7 +172,7 @@ services:
 
     networks:
       infra_network:
-        ipv4_address: 173.20.0.5
+        ipv4_address: 173.20.0.6
         aliases:
           - cloud.alias.${DOMAIN}
 
@@ -153,7 +180,7 @@ services:
     # Deactivate session by userid 34
     # gitlab-redis-cli DEL "session:gitlab:2::$( gitlab-redis-cli --scan --pattern 'session:user:gitlab:34:*' | cut -d':' -f7 )"
     image: docker.io/gitlab/gitlab-ce:latest
-    hostname: gitlab.${DOMAIN}
+    hostname: gitlab.hostname.${DOMAIN}
     container_name: ${PREFIX}_gitlab
     platform: linux/x86_64
     shm_size: 1GB
@@ -232,13 +259,13 @@ services:
         }
     networks:
       infra_network:
-        ipv4_address: 173.20.0.6
+        ipv4_address: 173.20.0.7
         aliases:
           - gitlab.${DOMAIN}
 
   grafana:
     image: docker.io/grafana/grafana-oss:latest
-    hostname: grafana.${DOMAIN}
+    hostname: grafana.hostname.${DOMAIN}
     container_name: ${PREFIX}_grafana
     platform: linux/x86_64
     labels:
@@ -251,13 +278,13 @@ services:
       - traefik.http.services.grafana.loadbalancer.server.port=3000
     networks:
       infra_network:
-        ipv4_address: 173.20.0.7
+        ipv4_address: 173.20.0.8
         aliases:
           - grafana.${DOMAIN}
 
   node-exporter:
     image: prom/node-exporter:latest
-    hostname: nodeexporter.${DOMAIN}
+    hostname: nodeexporter.hostname.${DOMAIN}
     container_name: ${PREFIX}_node_exporter
     platform: linux/x86_64
     restart: unless-stopped
@@ -272,13 +299,13 @@ services:
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
     networks:
       infra_network:
-        ipv4_address: 173.20.0.8
+        ipv4_address: 173.20.0.9
         aliases:
           - nodeexporter.${DOMAIN}
 
   prometheus:
     image: prom/prometheus:latest
-    hostname: prometheus.${DOMAIN}
+    hostname: prometheus.hostname.${DOMAIN}
     container_name: ${PREFIX}_prometheus
     platform: linux/x86_64
     restart: unless-stopped
@@ -293,13 +320,13 @@ services:
       --web.enable-lifecycle
     networks:
       infra_network:
-        ipv4_address: 173.20.0.9
+        ipv4_address: 173.20.0.10
         aliases:
           - prometheus.${DOMAIN}
 
   redis:
     image: redis:latest
-    hostname: redis.${DOMAIN}
+    hostname: redis.hostname.${DOMAIN}
     container_name: ${PREFIX}_redis
     platform: linux/x86_64
     restart: unless-stopped
@@ -309,13 +336,13 @@ services:
       - ${DATA_DIR}/redis/usr/local/etc/redis:/usr/local/etc/redis
     networks:
       infra_network:
-        ipv4_address: 173.20.0.10
+        ipv4_address: 173.20.0.11
         aliases:
           - redis.${DOMAIN}
 
   redisinsight:
     image: redislabs/redisinsight:latest
-    hostname: redisinsight.${DOMAIN}
+    hostname: redisinsight.hostname.${DOMAIN}
     container_name: ${PREFIX}_redisinsight
     platform: linux/x86_64
     restart: unless-stopped
@@ -335,7 +362,7 @@ services:
 
     networks:
       infra_network:
-        ipv4_address: 173.20.0.11
+        ipv4_address: 173.20.0.12
         aliases:
           - redisinsight.${DOMAIN}
 
@@ -352,14 +379,14 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
     networks:
       infra_network:
-        ipv4_address: 173.20.0.12
+        ipv4_address: 173.20.0.13
         aliases:
           - cadvisor.${DOMAIN}
 
   gotify:
     image: gotify/server
     container_name: ${PREFIX}_gotify
-    hostname: gotify.${DOMAIN}
+    hostname: gotify.hostname.${DOMAIN}
     platform: linux/x86_64
     labels:
       - traefik.enable=true
@@ -371,7 +398,7 @@ services:
       - traefik.http.services.gotify.loadbalancer.server.port=80
     networks:
       infra_network:
-        ipv4_address: 173.20.0.13
+        ipv4_address: 173.20.0.14
         aliases:
           - gotify.${DOMAIN}
 
@@ -384,7 +411,7 @@ services:
 
     image: mariadb:latest
     restart: always
-    hostname: mariadb.${DOMAIN}
+    hostname: mariadb.hostname.${DOMAIN}
     container_name: ${PREFIX}_mariadb
     platform: linux/x86_64
     healthcheck:
@@ -398,14 +425,14 @@ services:
       - ${DATA_DIR}/mariadb/etc/mysql/conf.d:/etc/mysql/conf.d
     networks:
       infra_network:
-        ipv4_address: 173.20.0.14
+        ipv4_address: 173.20.0.15
         aliases:
           - mariadb.${DOMAIN}
 
   maxscale:
     image: mariadb/maxscale:latest
     restart: always
-    hostname: maxscale.${DOMAIN}
+    hostname: maxscale.hostname.${DOMAIN}
     container_name: ${PREFIX}_maxscale
     platform: linux/x86_64
     labels:
@@ -419,14 +446,14 @@ services:
       - traefik.http.services.maxscale.loadbalancer.server.port=8989
     networks:
       infra_network:
-        ipv4_address: 173.20.0.15
+        ipv4_address: 173.20.0.16
         aliases:
           - maxscale.${DOMAIN}
 
   freeipaserver: #kinit && ipa
     image: freeipa/freeipa-server:fedora-37
     restart: always
-    hostname: freeipaserver.${DOMAIN}
+    hostname: freeipaserver.hostname.${DOMAIN}
     container_name: ${PREFIX}_freeipaserver
     platform: linux/x86_64
     privileged: true
@@ -456,14 +483,14 @@ services:
       - traefik.http.services.freeipaserver.loadbalancer.server.port=443
     networks:
       infra_network:
-        ipv4_address: 173.20.0.16
+        ipv4_address: 173.20.0.17
         aliases:
           - freeipaserver.${DOMAIN}
 
   whoami:
     image: traefik/whoami
     restart: always
-    hostname: whoami.${DOMAIN}
+    hostname: whoami.hostnamae.${DOMAIN}
     container_name: ${PREFIX}_whoami
     platform: linux/x86_64
     labels:
@@ -477,7 +504,7 @@ services:
       - traefik.http.services.whoami.loadbalancer.server.port=80
     networks:
       infra_network:
-        ipv4_address: 173.20.0.17
+        ipv4_address: 173.20.0.18
         aliases:
           - whoami.${DOMAIN}
 
@@ -485,7 +512,7 @@ services:
     build:
       context: "./resources/project"
     restart: always
-    hostname: project.${DOMAIN}
+    hostname: project.hostname.${DOMAIN}
     container_name: ${PREFIX}_project
     platform: linux/x86_64
     volumes:
@@ -511,7 +538,7 @@ services:
       - traefik.http.services.project.loadbalancer.server.port=80
     networks:
       infra_network:
-        ipv4_address: 173.20.0.18
+        ipv4_address: 173.20.0.19
         aliases:
           - project.${DOMAIN}
 
