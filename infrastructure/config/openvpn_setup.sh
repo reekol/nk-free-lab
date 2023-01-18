@@ -37,6 +37,7 @@ openvpn_setup_client () {
 
   docker container exec ${PREFIX}_setupc /bin/sh -c "/usr/share/easy-rsa/easyrsa --batch build-client-full  ${1}  nopass"
 
+  echo "################ START ${1}.ovpn ################"
   echo "client"
   echo "dev tun"
   echo "proto udp"
@@ -63,6 +64,8 @@ openvpn_setup_client () {
   echo "<key>"
   docker container exec ${PREFIX}_setupc /bin/sh -c "cat /pki/private/${1}.key"
   echo "</key>"
+  echo "################ END ${1}.ovpn ################"
+
 }
 
 openvpn_setup_vpn
