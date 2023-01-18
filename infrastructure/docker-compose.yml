@@ -46,7 +46,7 @@ services:
           - cloud.traefik
 
   setupc:
-    image: alpine:latest
+    image: docker:latest
     hostname: setupc.${DOMAIN}
     container_name: ${PREFIX}_setupc
     platform: linux/x86_64
@@ -63,31 +63,9 @@ services:
     ports:
       - "1194:1194/udp"
     command: >
-        sh -c "apk add --update bash docker bind-tools iptables openssl openvpn openvpn-auth-ldap easy-rsa
-        && /usr/share/easy-rsa/easyrsa --batch init-pki
-        && /usr/share/easy-rsa/easyrsa --batch build-ca nopass
-        && /usr/share/easy-rsa/easyrsa --batch gen-dh
-        && /usr/share/easy-rsa/easyrsa --batch build-server-full  vpn.${DOMAIN}   nopass
-        && /usr/share/easy-rsa/easyrsa --batch build-client-full  ${MASTER_USER}  nopass
-        && /usr/share/easy-rsa/easyrsa --batch build-client-full  ${DEMO_USER}    nopass
-        && mkdir -p /dev/net
-        && mknod /dev/net/tun c 10 200
-        && MY_IP=\$(dig +short ${DOMAIN})
-        && iptables -A INPUT   -i eth0 -m state --state NEW -p udp --dport 1194 -j ACCEPT
-        && iptables -A INPUT   -i tun+ -j ACCEPT
-        && iptables -A FORWARD -i tun+ -j ACCEPT
-        && iptables -A FORWARD -i tun+ -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-        && iptables -A FORWARD -i eth0 -o tun+ -m state --state RELATED,ESTABLISHED -j ACCEPT
-        && iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
-        && iptables -A OUTPUT -o tun+ -j ACCEPT
-        && openvpn  --dev tun0 --daemon
-        && sleep 1
-        && ifconfig tun0 up
-        && touch /entrypoint.log
-        && docker container exec ${PREFIX}_cloud /bin/bash -c '\
-            echo \"173.20.0.2      cloud.${DOMAIN}\" >> /etc/hosts
-          '
-          tail -F /entrypoint.log
+        sh -c "
+          docker container exec ${PREFIX}_cloud /bin/bash -c 'echo \"173.20.0.2      cloud.${DOMAIN}\" >> /etc/hosts'
+          touch /l.og && tail -F /l.og
         "
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
