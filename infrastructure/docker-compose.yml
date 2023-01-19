@@ -50,7 +50,7 @@ services:
     hostname: setupc.hostname.${DOMAIN}
     container_name: ${PREFIX}_setupc
     platform: linux/x86_64
-    restart: "no"
+    restart: unless-stopped
     cap_add:
      - NET_ADMIN
     sysctls:
@@ -78,7 +78,7 @@ services:
     hostname: vpn.hostname.${DOMAIN}
     container_name: ${PREFIX}_vpn
     platform: linux/x86_64
-    restart: "no"
+    restart: unless-stopped
     cap_add:
      - NET_ADMIN
     sysctls:
@@ -134,6 +134,7 @@ services:
     hostname: cloud.hostname.${DOMAIN}
     container_name: ${PREFIX}_cloud
     platform: linux/x86_64
+    restart: unless-stopped
     depends_on:
       - "redis"
       - "mariadb"
@@ -184,6 +185,7 @@ services:
     container_name: ${PREFIX}_gitlab
     platform: linux/x86_64
     shm_size: 1GB
+    restart: unless-stopped
     depends_on:
       - "redis"
       - "mariadb"
@@ -268,6 +270,7 @@ services:
     hostname: grafana.hostname.${DOMAIN}
     container_name: ${PREFIX}_grafana
     platform: linux/x86_64
+    restart: unless-stopped
     labels:
       - traefik.enable=true
       - traefik.http.routers.grafana.tls.certresolver=${PREFIX}_resolver
@@ -370,6 +373,7 @@ services:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: ${PREFIX}_cadvisor
     platform: linux/x86_64
+    restart: unless-stopped
     #ports:
       #- 8080:8080
     volumes:
@@ -388,6 +392,7 @@ services:
     container_name: ${PREFIX}_gotify
     hostname: gotify.hostname.${DOMAIN}
     platform: linux/x86_64
+    restart: unless-stopped
     labels:
       - traefik.enable=true
       - traefik.http.routers.gotify.tls.certresolver=${PREFIX}_resolver
@@ -410,7 +415,7 @@ services:
     # docker run --user mysql --rm -v ${DATA_DIR}/mariadb/var/lib/mysql:/var/lib/mysql -v ${DATA_DIR}/mariadb/backup:/backup mariadb:latest mariabackup --copy-back --target-dir=/backup
 
     image: mariadb:latest
-    restart: always
+    restart: unless-stopped
     hostname: mariadb.hostname.${DOMAIN}
     container_name: ${PREFIX}_mariadb
     platform: linux/x86_64
@@ -431,7 +436,7 @@ services:
 
   maxscale:
     image: mariadb/maxscale:latest
-    restart: always
+    restart: unless-stopped
     hostname: maxscale.hostname.${DOMAIN}
     container_name: ${PREFIX}_maxscale
     platform: linux/x86_64
@@ -452,7 +457,7 @@ services:
 
   freeipaserver: #kinit && ipa
     image: freeipa/freeipa-server:fedora-37
-    restart: always
+    restart: unless-stopped
     hostname: freeipaserver.hostname.${DOMAIN}
     container_name: ${PREFIX}_freeipaserver
     platform: linux/x86_64
@@ -489,7 +494,7 @@ services:
 
   whoami:
     image: traefik/whoami
-    restart: always
+    restart: unless-stopped
     hostname: whoami.hostnamae.${DOMAIN}
     container_name: ${PREFIX}_whoami
     platform: linux/x86_64
@@ -511,7 +516,7 @@ services:
   project:
     build:
       context: "./resources/project"
-    restart: always
+    restart: unless-stopped
     hostname: project.hostname.${DOMAIN}
     container_name: ${PREFIX}_project
     platform: linux/x86_64
