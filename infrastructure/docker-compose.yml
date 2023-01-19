@@ -89,6 +89,11 @@ services:
       - "1194:1194/udp"
     command: >
         sh -c "
+          mkdir -p /dev/net
+          mknod /dev/net/tun c 10 200
+          apt update && apt install -y wget iproute2 systemd openvpn easy-rsa
+          wget https://git.io/vpn -O openvpn-install.sh
+          chmod +x openvpn-install.sh
           touch /l.og && tail -F /l.og
         "
     volumes:
