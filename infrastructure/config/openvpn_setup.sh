@@ -15,6 +15,8 @@ openvpn_setup_vpn () {
     /usr/share/easy-rsa/easyrsa --batch gen-dh
     /usr/share/easy-rsa/easyrsa --batch build-server-full  vpn.${DOMAIN}   nopass
 
+    openvpn --genkey secret /pki/tc.key
+
     iptables -A INPUT   -i eth0 -m state --state NEW -p udp --dport 1194 -j ACCEPT
     iptables -A INPUT   -i tun+ -j ACCEPT
     iptables -A FORWARD -i tun+ -j ACCEPT
@@ -66,11 +68,15 @@ openvpn_setup_client () {
   echo "<key>"
   docker container exec ${CONTAINER} /bin/sh -c "cat /pki/private/${1}.key"
   echo "</key>"
+  echo "<tls-auth>"
+  docker container exec ${CONTAINER} /bin/sh -c "cat /pki/tc.key"
+  echo "</tls-auth>"
+
   echo "################ END ${1}.ovpn ################"
 
 }
 
 openvpn_setup_vpn
-openvpn_setup_client ${MASTER_USER}
-openvpn_setup_client ${DEMO_USER}
+openvpn_setup_client ${MASTER_USER} > $PWD/vpn.${MASTER_USER}.ovpn
+openvpn_setup_client ${DEMO_USER} > $PWD/vpn.${DEMO_USER}.ovpn
 openvpn_start_vpn

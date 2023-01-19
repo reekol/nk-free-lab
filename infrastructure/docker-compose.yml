@@ -85,9 +85,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=0
       - net.ipv6.conf.all.forwarding=1
       - net.ipv6.conf.default.forwarding=1
-    depends_on:
-      - "mariadb"
-      - "cloud"
     ports:
       - "1194:1194/udp"
     command: >
