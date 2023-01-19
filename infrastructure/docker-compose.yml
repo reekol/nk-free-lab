@@ -107,10 +107,22 @@ services:
           iptables -I FORWARD -s 10.8.0.0/24 -j ACCEPT
           iptables -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
 
-          echo '173.20.0.2  cloud.vpn' >> /etc/hosts
+          echo '173.20.0.2  cloud.vpn'          >> /etc/hosts
+          echo '173.20.0.2  freeipaserver.vpn'  >> /etc/hosts
+          echo '173.20.0.2  gitlab.vpn'         >> /etc/hosts
+          echo '173.20.0.2  grafana.vpn'        >> /etc/hosts
+          echo '173.20.0.2  portainer.vpn'      >> /etc/hosts
+          echo '173.20.0.2  maxscale.vpn'       >> /etc/hosts
+          echo '173.20.0.2  whoami.vpn'         >> /etc/hosts
+          echo '173.20.0.2  api.vpn'            >> /etc/hosts
+
           [ -f \"/etc/openvpn/server/server.conf\" ] && {
+            cd /etc/openvpn/server
+            grep -qxF 'push \"dhcp-option DNS 10.8.0.1\"' server.conf || {
+                echo 'push \"dhcp-option DNS 10.8.0.1\"' >> server.conf
+            }
             dnsmasq
-            cd /etc/openvpn/server && openvpn --config server.conf
+            openvpn --config server.conf
           }
           touch /l.og && tail -F /l.og
         "
@@ -137,7 +149,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.portainer.tls.certresolver=${PREFIX}_resolver
-      - traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN}`)
+      - traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN}`, `portainer.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.portainer.entrypoints=https
       - traefik.http.routers.portainer.tls=true
@@ -219,7 +231,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.gitlab.tls.certresolver=${PREFIX}_resolver
-      - traefik.http.routers.gitlab.rule=Host(`gitlab.${DOMAIN}`)
+      - traefik.http.routers.gitlab.rule=Host(`gitlab.${DOMAIN}`, `gitlab.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.gitlab.entrypoints=https
       - traefik.http.routers.gitlab.tls=true
@@ -296,7 +308,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.grafana.tls.certresolver=${PREFIX}_resolver
-      - traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN}`)
+      - traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN}`, `grafana.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.grafana.entrypoints=https
       - traefik.http.routers.grafana.tls=true
@@ -464,7 +476,7 @@ services:
     platform: linux/x86_64
     labels:
       - traefik.enable=true
-      - traefik.http.routers.maxscale.rule=Host(`maxscale.${DOMAIN}`)
+      - traefik.http.routers.maxscale.rule=Host(`maxscale.${DOMAIN}`, `maxscale.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.maxscale.entrypoints=https
       - traefik.http.routers.maxscale.tls=true
@@ -522,7 +534,7 @@ services:
     platform: linux/x86_64
     labels:
       - traefik.enable=true
-      - traefik.http.routers.whoami.rule=Host(`whoami.${DOMAIN}`)
+      - traefik.http.routers.whoami.rule=Host(`whoami.${DOMAIN}`, `whoami.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.whoami.entrypoints=https
       - traefik.http.routers.whoami.tls=true
@@ -556,7 +568,7 @@ services:
       - LDAP_APACHE_AuthLDAPBindPassword=${LDAP_APACHE_AuthLDAPBindPassword}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.project.rule=Host(`project.${DOMAIN}`,`api.${DOMAIN}`)
+      - traefik.http.routers.project.rule=Host(`project.${DOMAIN}`,`api.${DOMAIN}`, `api.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.project.entrypoints=https
       - traefik.http.routers.project.tls=true
