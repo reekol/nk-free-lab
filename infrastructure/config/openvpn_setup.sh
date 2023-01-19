@@ -14,6 +14,7 @@ openvpn_setup_vpn () {
     /usr/share/easy-rsa/easyrsa --batch build-ca nopass
     /usr/share/easy-rsa/easyrsa --batch gen-dh
     /usr/share/easy-rsa/easyrsa --batch build-server-full  vpn.${DOMAIN}   nopass
+    /usr/share/easy-rsa/easyrsa --batch --days=3650 gen-crl
 
     openvpn --genkey secret /pki/tc.key
 
@@ -24,13 +25,14 @@ openvpn_setup_vpn () {
     iptables -A FORWARD -i eth0 -o tun+ -m state --state RELATED,ESTABLISHED -j ACCEPT
     iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
     iptables -A OUTPUT -o tun+ -j ACCEPT
+
     "
 
 }
 
 openvpn_start_vpn () {
   docker container exec ${CONTAINER} /bin/sh -c "
-    openvpn  --dev tun0 --daemon
+    openvpn  --dev tun0 --daemon --log /l.og
     sleep 1
     ifconfig tun0 up"
 }
@@ -76,7 +78,19 @@ openvpn_setup_client () {
 
 }
 
-openvpn_setup_vpn
-openvpn_setup_client ${MASTER_USER} > $PWD/vpn.${MASTER_USER}.ovpn
-openvpn_setup_client ${DEMO_USER} > $PWD/vpn.${DEMO_USER}.ovpn
-openvpn_start_vpn
+openvpn_install () {
+ docker container exec ${CONTAINER} /bin/bash -c "
+    mkdir -p /dev/net
+    mknod /dev/net/tun c 10 200
+    apt update && apt install -y wget iproute2 systemd openvpn easy-rsa
+    wget https://git.io/vpn -O openvpn-install.sh
+    chmod +x openvpn-install.sh
+    echo \"\n\" | ./openvpn-install.sh
+  "
+}
+openvpn_install
+
+#openvpn_setup_vpn
+#openvpn_setup_client ${MASTER_USER} > $PWD/vpn.${MASTER_USER}.ovpn
+#openvpn_setup_client ${DEMO_USER} > $PWD/vpn.${DEMO_USER}.ovpn
+#openvpn_start_vpn

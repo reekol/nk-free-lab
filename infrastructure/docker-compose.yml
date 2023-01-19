@@ -74,7 +74,7 @@ services:
           - setupc.${DOMAIN}
 
   vpn:
-    image: alpine:latest
+    image: debian:latest
     hostname: vpn.hostname.${DOMAIN}
     container_name: ${PREFIX}_vpn
     platform: linux/x86_64
