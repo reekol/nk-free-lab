@@ -59,8 +59,9 @@ setup_cloud () {
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.2' trusted_proxies 0
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.${DOMAIN:-coldborn.localhost}' trusted_proxies 1
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.${DOMAIN:-coldborn.localhost}' trusted_domains 0
-        sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.2' trusted_domains 1
-        sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.4' trusted_domains 2
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.vpn'  trusted_domains 1
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.2' trusted_domains 2
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.4' trusted_domains 3
 
         sudo -u www-data php -d memory_limit=512M occ app:install user_ldap
         sudo -u www-data php -d memory_limit=512M occ app:enable  user_ldap

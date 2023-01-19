@@ -79,6 +79,7 @@ services:
     container_name: ${PREFIX}_vpn
     platform: linux/x86_64
     restart: unless-stopped
+    privileged: true
     cap_add:
      - NET_ADMIN
     sysctls:
@@ -88,16 +89,34 @@ services:
     ports:
       - "1194:1194/udp"
     command: >
-        sh -c "
-          mkdir -p /dev/net
-          mknod /dev/net/tun c 10 200
-          apt update && apt install -y wget iproute2 systemd openvpn easy-rsa
-          wget https://git.io/vpn -O openvpn-install.sh
-          chmod +x openvpn-install.sh
+        bash -c "
+           [ -f \"/dev/net/tun\" ] || {
+            mkdir -p /dev/net
+            mknod /dev/net/tun c 10 200
+           }
+
+           apt update && apt install -y wget iputils-ping dnsmasq iptables iproute2 systemd openvpn easy-rsa
+
+           [ -f \"openvpn-install.sh\" ] || {
+            wget https://git.io/vpn -O openvpn-install.sh
+            chmod +x openvpn-install.sh
+           }
+
+          iptables -t nat -A POSTROUTING -s 10.8.0.0/24 ! -d 10.8.0.0/24 -j SNAT --to 173.20.0.4
+          iptables -I INPUT -p udp --dport 1194 -j ACCEPT
+          iptables -I FORWARD -s 10.8.0.0/24 -j ACCEPT
+          iptables -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+          echo '173.20.0.2  cloud.vpn' >> /etc/hosts
+          [ -f \"/etc/openvpn/server/server.conf\" ] && {
+            dnsmasq
+            cd /etc/openvpn/server && openvpn --config server.conf
+          }
           touch /l.og && tail -F /l.og
         "
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ${DATA_DIR}/vpn/etc/openvpn:/etc/openvpn
     networks:
       infra_network:
         ipv4_address: 173.20.0.4
@@ -138,6 +157,7 @@ services:
     platform: linux/x86_64
     restart: unless-stopped
     depends_on:
+      - "traefik"
       - "redis"
       - "mariadb"
     volumes:
@@ -148,7 +168,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.cloud.tls.certresolver=${PREFIX}_resolver
-      - traefik.http.routers.cloud.rule=Host(`cloud.${DOMAIN}`)
+      - traefik.http.routers.cloud.rule=Host(`cloud.${DOMAIN}`,`cloud.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.cloud.entrypoints=https
       - traefik.http.routers.cloud.tls=true
@@ -167,7 +187,7 @@ services:
     environment:
       - OVERWRITEPROTOCOL=https
       - REDIS_HOST=redis.${DOMAIN}
-      - NEXTCLOUD_TRUSTED_DOMAINS=cloud.${DOMAIN}
+      - NEXTCLOUD_TRUSTED_DOMAINS=cloud.${DOMAIN},cloud.vpn
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
       - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
       - PHP_MEMORY_LIMIT=${NEXTCLOUD_PHP_MEMORY_LIMIT}
@@ -481,7 +501,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.freeipaserver.tls.certresolver=${PREFIX}_resolver
-      - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.${DOMAIN}`)
+      - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.${DOMAIN}`,`freeipaserver.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.freeipaserver.entrypoints=https
       - traefik.http.routers.freeipaserver.tls=true
