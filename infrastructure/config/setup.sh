@@ -10,6 +10,7 @@ setup_freeipa () {
         ipa  group-add ${LDAP_GROUP_API_WRITE}  --gid 5
         ipa  group-add ${LDAP_GROUP_API_READ}   --gid 6
         ipa  group-add ${LDAP_GROUP_GRAFANA}    --gid 7
+        ipa  group-add ${LDAP_GROUP_VPN}        --gid 8
 
         echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_GITLAB}   --first=Bind --last=Gitlab  --password --gidnumber=2 --noprivate
         echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_CLOUD}    --first=Bind --last=Cloud   --password --gidnumber=2 --noprivate
@@ -20,7 +21,8 @@ setup_freeipa () {
             --users=${LDAP_USER_SERVICE_GITLAB}     \
             --users=${LDAP_USER_SERVICE_CLOUD}      \
             --users=${LDAP_USER_SERVICE_GRAFANA}    \
-            --users=${LDAP_USER_SERVICE_APACHE}
+            --users=${LDAP_USER_SERVICE_APACHE}     \
+            --users=${LDAP_USER_SERVICE_VPN}
 
        echo ${DEMO_PASS} | ipa user-add ${DEMO_USER} --first=Demo --last=User  --password --gidnumber=2 --noprivate
        ipa group-add-member ${LDAP_GROUP_CLOUD}     --users=${DEMO_USER}
@@ -28,6 +30,7 @@ setup_freeipa () {
        ipa group-add-member ${LDAP_GROUP_API_WRITE} --users=${DEMO_USER}
        ipa group-add-member ${LDAP_GROUP_API_READ}  --users=${DEMO_USER}
        ipa group-add-member ${LDAP_GROUP_GRAFANA}   --users=${DEMO_USER}
+       ipa group-add-member ${LDAP_GROUP_VPN}       --users=${DEMO_USER}
     "
 }
 
@@ -108,10 +111,11 @@ setup_cloud () {
     "
 }
 
-setup_grafana () {
-  echo ""
+setup_vpn () {
+
 }
 
 setup_freeipa
 setup_cloud
 setup_grafana
+setup_vpn

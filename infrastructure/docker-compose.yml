@@ -23,10 +23,10 @@ services:
 #      --certificatesresolvers.${PREFIX}_resolver.acme.tlschallenge=true
 #      --certificatesresolvers.${PREFIX}_resolver.acme.email=${LETSENCRYPT_ACC_EMAIL}
 #      --certificatesresolvers.${PREFIX}_resolver.acme.storage=/letsencrypt/acme.json
-    ports:
-      - target: 443
-        published: 443
-        mode: host
+#    ports:
+#      - target: 443
+#        published: 443
+#        mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DATA_DIR}/traefik/letsencrypt:/letsencrypt
@@ -58,7 +58,6 @@ services:
       - net.ipv6.conf.all.forwarding=1
       - net.ipv6.conf.default.forwarding=1
     depends_on:
-      - "mariadb"
       - "cloud"
     command: >
         sh -c "
@@ -108,7 +107,7 @@ services:
           iptables -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
 
           echo '173.20.0.2  cloud.vpn'          >> /etc/hosts
-          echo '173.20.0.2  freeipaserver.vpn'  >> /etc/hosts
+          echo '173.20.0.2  ipa.vpn'            >> /etc/hosts
           echo '173.20.0.2  gitlab.vpn'         >> /etc/hosts
           echo '173.20.0.2  grafana.vpn'        >> /etc/hosts
           echo '173.20.0.2  portainer.vpn'      >> /etc/hosts
@@ -116,10 +115,19 @@ services:
           echo '173.20.0.2  whoami.vpn'         >> /etc/hosts
           echo '173.20.0.2  api.vpn'            >> /etc/hosts
 
+          echo '173.20.0.2  cloud.${DOMAIN}'          >> /etc/hosts
+          echo '173.20.0.2  freeipaserver.${DOMAIN}'  >> /etc/hosts
+          echo '173.20.0.2  gitlab.${DOMAIN}'         >> /etc/hosts
+          echo '173.20.0.2  grafana.${DOMAIN}'        >> /etc/hosts
+          echo '173.20.0.2  portainer.${DOMAIN}'      >> /etc/hosts
+          echo '173.20.0.2  maxscale.${DOMAIN}'       >> /etc/hosts
+          echo '173.20.0.2  whoami.${DOMAIN}'         >> /etc/hosts
+          echo '173.20.0.2  api.${DOMAIN}'            >> /etc/hosts
+
           [ -f \"/etc/openvpn/server/server.conf\" ] && {
             cd /etc/openvpn/server
-            grep -qxF 'push \"dhcp-option DNS 10.8.0.1\"' server.conf || {
-                echo 'push \"dhcp-option DNS 10.8.0.1\"' >> server.conf
+            grep -qxF 'push \"dhcp-option DNS 10.8.0.1\"'    server.conf || {
+                 echo 'push \"dhcp-option DNS 10.8.0.1\"' >> server.conf
             }
             dnsmasq
             openvpn --config server.conf
@@ -171,6 +179,7 @@ services:
     depends_on:
       - "traefik"
       - "redis"
+      - "freeipaserver"
       - "mariadb"
     volumes:
       - ${DATA_DIR}/cloud/var/www/html:/var/www/html
@@ -513,7 +522,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.freeipaserver.tls.certresolver=${PREFIX}_resolver
-      - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.${DOMAIN}`,`freeipaserver.vpn`)
+      - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.${DOMAIN}`,`freeipaserver.vpn`, `ipa.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.freeipaserver.entrypoints=https
       - traefik.http.routers.freeipaserver.tls=true
