@@ -23,10 +23,10 @@ services:
 #      --certificatesresolvers.${PREFIX}_resolver.acme.tlschallenge=true
 #      --certificatesresolvers.${PREFIX}_resolver.acme.email=${LETSENCRYPT_ACC_EMAIL}
 #      --certificatesresolvers.${PREFIX}_resolver.acme.storage=/letsencrypt/acme.json
-#    ports:
-#      - target: 443
-#        published: 443
-#        mode: host
+    ports:
+      - target: 443
+        published: 443
+        mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DATA_DIR}/traefik/letsencrypt:/letsencrypt
@@ -47,7 +47,7 @@ services:
 
   setupc:
     image: docker:latest
-    hostname: setupc.hostname.${DOMAIN}
+    hostname: setupc.${DOMAIN}
     container_name: ${PREFIX}_setupc
     platform: linux/x86_64
     restart: unless-stopped
@@ -74,7 +74,7 @@ services:
 
   vpn:
     image: debian:latest
-    hostname: vpn.hostname.${DOMAIN}
+    hostname: vpn.${DOMAIN}
     container_name: ${PREFIX}_vpn
     platform: linux/x86_64
     restart: unless-stopped
@@ -143,7 +143,7 @@ services:
 
   portainer:
     image: docker.io/portainer/portainer-ce:latest
-    hostname: portainer.hostname.${DOMAIN}
+    hostname: portainer.${DOMAIN}
     container_name: ${PREFIX}_portainer
     platform: linux/x86_64
     command:
@@ -170,7 +170,7 @@ services:
   # sudo -u www-data php occ config:system:set --value 0 remember_login_cookie_lifetime
   cloud:
     image: docker.io/nextcloud:latest
-    hostname: cloud.hostname.${DOMAIN}
+    hostname: cloud.${DOMAIN}
     container_name: ${PREFIX}_cloud
     platform: linux/x86_64
     restart: unless-stopped
@@ -222,7 +222,7 @@ services:
     # Deactivate session by userid 34
     # gitlab-redis-cli DEL "session:gitlab:2::$( gitlab-redis-cli --scan --pattern 'session:user:gitlab:34:*' | cut -d':' -f7 )"
     image: docker.io/gitlab/gitlab-ce:latest
-    hostname: gitlab.hostname.${DOMAIN}
+    hostname: gitlab.${DOMAIN}
     container_name: ${PREFIX}_gitlab
     platform: linux/x86_64
     shm_size: 1GB
@@ -308,7 +308,7 @@ services:
 
   grafana:
     image: docker.io/grafana/grafana-oss:latest
-    hostname: grafana.hostname.${DOMAIN}
+    hostname: grafana.${DOMAIN}
     container_name: ${PREFIX}_grafana
     platform: linux/x86_64
     restart: unless-stopped
@@ -328,7 +328,7 @@ services:
 
   node-exporter:
     image: prom/node-exporter:latest
-    hostname: nodeexporter.hostname.${DOMAIN}
+    hostname: nodeexporter.${DOMAIN}
     container_name: ${PREFIX}_node_exporter
     platform: linux/x86_64
     restart: unless-stopped
@@ -349,7 +349,7 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
-    hostname: prometheus.hostname.${DOMAIN}
+    hostname: prometheus.${DOMAIN}
     container_name: ${PREFIX}_prometheus
     platform: linux/x86_64
     restart: unless-stopped
@@ -370,7 +370,7 @@ services:
 
   redis:
     image: redis:latest
-    hostname: redis.hostname.${DOMAIN}
+    hostname: redis.${DOMAIN}
     container_name: ${PREFIX}_redis
     platform: linux/x86_64
     restart: unless-stopped
@@ -386,7 +386,7 @@ services:
 
   redisinsight:
     image: redislabs/redisinsight:latest
-    hostname: redisinsight.hostname.${DOMAIN}
+    hostname: redisinsight.${DOMAIN}
     container_name: ${PREFIX}_redisinsight
     platform: linux/x86_64
     restart: unless-stopped
@@ -431,7 +431,7 @@ services:
   gotify:
     image: gotify/server
     container_name: ${PREFIX}_gotify
-    hostname: gotify.hostname.${DOMAIN}
+    hostname: gotify.${DOMAIN}
     platform: linux/x86_64
     restart: unless-stopped
     labels:
@@ -457,7 +457,7 @@ services:
 
     image: mariadb:latest
     restart: unless-stopped
-    hostname: mariadb.hostname.${DOMAIN}
+    hostname: mariadb.${DOMAIN}
     container_name: ${PREFIX}_mariadb
     platform: linux/x86_64
     healthcheck:
@@ -478,7 +478,7 @@ services:
   maxscale:
     image: mariadb/maxscale:latest
     restart: unless-stopped
-    hostname: maxscale.hostname.${DOMAIN}
+    hostname: maxscale.${DOMAIN}
     container_name: ${PREFIX}_maxscale
     platform: linux/x86_64
     labels:
@@ -499,7 +499,7 @@ services:
   freeipaserver: #kinit && ipa
     image: freeipa/freeipa-server:fedora-37
     restart: unless-stopped
-    hostname: freeipaserver.hostname.${DOMAIN}
+    hostname: freeipaserver.${DOMAIN}
     container_name: ${PREFIX}_freeipaserver
     platform: linux/x86_64
     privileged: true
@@ -558,7 +558,7 @@ services:
     build:
       context: "./resources/project"
     restart: unless-stopped
-    hostname: project.hostname.${DOMAIN}
+    hostname: project.${DOMAIN}
     container_name: ${PREFIX}_project
     platform: linux/x86_64
     volumes:
