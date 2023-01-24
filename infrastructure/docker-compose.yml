@@ -107,7 +107,6 @@ services:
           iptables -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
 
           echo '173.20.0.2  cloud.vpn'          >> /etc/hosts
-          echo '173.20.0.2  ipa.vpn'            >> /etc/hosts
           echo '173.20.0.2  gitlab.vpn'         >> /etc/hosts
           echo '173.20.0.2  grafana.vpn'        >> /etc/hosts
           echo '173.20.0.2  portainer.vpn'      >> /etc/hosts
@@ -116,7 +115,6 @@ services:
           echo '173.20.0.2  api.vpn'            >> /etc/hosts
 
           echo '173.20.0.2  cloud.${DOMAIN}'          >> /etc/hosts
-          echo '173.20.0.2  freeipaserver.${DOMAIN}'  >> /etc/hosts
           echo '173.20.0.2  gitlab.${DOMAIN}'         >> /etc/hosts
           echo '173.20.0.2  grafana.${DOMAIN}'        >> /etc/hosts
           echo '173.20.0.2  portainer.${DOMAIN}'      >> /etc/hosts
@@ -522,7 +520,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.freeipaserver.tls.certresolver=${PREFIX}_resolver
-      - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.${DOMAIN}`,`freeipaserver.vpn`, `ipa.vpn`)
+      - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.${DOMAIN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.freeipaserver.entrypoints=https
       - traefik.http.routers.freeipaserver.tls=true
