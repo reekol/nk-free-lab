@@ -16,6 +16,7 @@ setup_freeipa () {
         echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_CLOUD}    --first=Bind --last=Cloud   --password --gidnumber=2 --noprivate
         echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_APACHE}   --first=Bind --last=Apache  --password --gidnumber=2 --noprivate
         echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_GRAFANA}  --first=Bind --last=Grafana --password --gidnumber=2 --noprivate
+        echo ${LDAP_BIND_PASSWORD} | ipa user-add ${LDAP_USER_SERVICE_VPM}      --first=Bind --last=vpn     --password --gidnumber=2 --noprivate
 
         ipa group-add-member ${LDAP_GROUP_SERVICES} \
             --users=${LDAP_USER_SERVICE_GITLAB}     \
