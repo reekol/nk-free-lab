@@ -17,6 +17,7 @@ services:
       --providers.docker
       --entrypoints.http.address=:80
       --entrypoints.https.address=:443
+      --entrypoints.vnc.address=:5901
       --log
       --accesslog
       --serverstransport.insecureskipverify=true
@@ -26,6 +27,9 @@ services:
     ports:
       - target: 443
         published: 443
+        mode: host
+      - target: 5901
+        published: 5901
         mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -587,6 +591,37 @@ services:
         ipv4_address: 173.20.0.19
         aliases:
           - project.${DOMAIN}
+
+  novnc:
+    build:
+      context: "./resources/novnc"
+    restart: unless-stopped
+    hostname: novnc.${DOMAIN}
+    container_name: ${PREFIX}_novnc
+    platform: linux/x86_64
+    volumes:
+      - ${DATA_DIR}/novnc/code:/code
+      - ${DATA_DIR}/root/.config:/root/.config
+      - ${DATA_DIR}/root/.local:/root/.local
+    environment:
+      - NOVNC_PASSWORD=${NOVNC_PASSWORD}
+      - NOVNC_DISPLAY=${NOVNC_DISPLAY}
+      - NOVNC_HEIGHT=${NOVNC_HEIGHT}
+      - NOVNC_WIDTH=${NOVNC_WIDTH}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.novnc.rule=Host(`novnc.${DOMAIN}`)
+      - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
+      - traefik.http.routers.novnc.entrypoints=https,vnc
+      - traefik.http.routers.novnc.tls=true
+      - traefik.http.services.novnc.loadbalancer.passhostheader=false
+      - traefik.http.services.novnc.loadbalancer.server.scheme=http
+      - traefik.http.services.novnc.loadbalancer.server.port=80
+    networks:
+      infra_network:
+        ipv4_address: 173.20.0.20
+        aliases:
+          - novnc.${DOMAIN}
 
 networks:
   infra_network:
