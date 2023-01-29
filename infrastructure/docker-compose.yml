@@ -601,7 +601,7 @@ services:
     platform: linux/x86_64
     volumes:
       - ${DATA_DIR}/novnc/code:/code
-      - ${DATA_DIR}/root:/root
+      - ${DATA_DIR}/novnc/root:/root
     environment:
       - NOVNC_PASSWORD=${NOVNC_PASSWORD}
       - NOVNC_DISPLAY=${NOVNC_DISPLAY}
