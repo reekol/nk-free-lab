@@ -19,4 +19,5 @@ screen -S nk_vnc -dm \
     x11vnc  -shared -rfbport 5901 -rfbauth /tmp/vncpass -display :${DISPLAY} -forever -auth /tmp/xvfb.auth
 
 screen -ls
+cat /usr/share/novnc/vnc.html > /usr/share/novnc/index.html
 websockify --web /usr/share/novnc 80 localhost:5901
