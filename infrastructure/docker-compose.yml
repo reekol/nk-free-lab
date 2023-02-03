@@ -98,7 +98,7 @@ services:
             mknod /dev/net/tun c 10 200
            }
 
-           apt update && apt install -y wget iputils-ping dnsmasq iptables iproute2 systemd openvpn easy-rsa
+           apt update && apt install -y wget iputils-ping dnsmasq iptables iproute2 systemd openvpn easy-rsa openvpn-auth-ldap vim
 
            [ -f \"openvpn-install.sh\" ] || {
             wget https://git.io/vpn -O openvpn-install.sh
@@ -130,6 +130,8 @@ services:
             cd /etc/openvpn/server
             grep -qxF 'push \"dhcp-option DNS 10.8.0.1\"'    server.conf || {
                  echo 'push \"dhcp-option DNS 10.8.0.1\"' >> server.conf
+                 echo 'plugin /usr/lib/openvpn/openvpn-auth-ldap.so \"/etc/openvpn/auth/auth-ldap.conf\"' >> server.conf
+                 echo 'client-cert-not-required' >> server.conf
             }
             dnsmasq
             openvpn --config server.conf

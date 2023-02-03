@@ -3,12 +3,12 @@ touch /entrypoint.log
 DISPLAY=${NOVNC_DISPLAY}
 
 screen -S nk_novncapp -dm \
-    xvfb-run --listen-tcp --server-num $DISPLAY --auth-file /tmp/xvfb.auth \
+    xvfb-run --listen-tcp --server-num ${DISPLAY} --auth-file /tmp/xvfb.auth \
     -s "-ac -screen 0 ${NOVNC_WIDTH}x${NOVNC_HEIGHT}x24" \
     /usr/bin/kate
 #   /usr/share/code/bin/code --no-sandbox --user-data-dir /code
 
-sleep 3
+sleep 5
 APP_ID=$(export DISPLAY=:$DISPLAY && xdotool search --onlyvisible kate)
 
 $(export DISPLAY=:$DISPLAY && xdotool windowmove $APP_ID 0 0)
