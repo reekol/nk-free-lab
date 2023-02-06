@@ -93,54 +93,59 @@ services:
       - "1194:1194/udp"
     command: >
         bash -c "
-           [ -f \"/dev/net/tun\" ] || {
+          [ -f \"/dev/net/tun\" ] || {
             mkdir -p /dev/net
             mknod /dev/net/tun c 10 200
-           }
+          }
 
-           apt update && apt install -y wget iputils-ping dnsmasq iptables iproute2 systemd openvpn easy-rsa openvpn-auth-ldap vim
-
-           [ -f \"openvpn-install.sh\" ] || {
-            wget https://git.io/vpn -O openvpn-install.sh
-            chmod +x openvpn-install.sh
-           }
+          apt update
+          apt install -y wget iputils-ping dnsmasq iptables iproute2 systemd
+          apt install -y openvpn easy-rsa ldap-utils
 
           iptables -t nat -A POSTROUTING -s 10.8.0.0/24 ! -d 10.8.0.0/24 -j SNAT --to 173.20.0.4
           iptables -I INPUT -p udp --dport 1194 -j ACCEPT
           iptables -I FORWARD -s 10.8.0.0/24 -j ACCEPT
           iptables -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
 
-          echo '173.20.0.2  cloud.vpn'          >> /etc/hosts
-          echo '173.20.0.2  gitlab.vpn'         >> /etc/hosts
-          echo '173.20.0.2  grafana.vpn'        >> /etc/hosts
-          echo '173.20.0.2  portainer.vpn'      >> /etc/hosts
-          echo '173.20.0.2  maxscale.vpn'       >> /etc/hosts
-          echo '173.20.0.2  whoami.vpn'         >> /etc/hosts
-          echo '173.20.0.2  api.vpn'            >> /etc/hosts
+          echo '173.20.0.2  cloud.vpn'           >> /etc/hosts
+          echo '173.20.0.2  gitlab.vpn'          >> /etc/hosts
+          echo '173.20.0.2  grafana.vpn'         >> /etc/hosts
+          echo '173.20.0.2  portainer.vpn'       >> /etc/hosts
+          echo '173.20.0.2  maxscale.vpn'        >> /etc/hosts
+          echo '173.20.0.2  whoami.vpn'          >> /etc/hosts
+          echo '173.20.0.2  api.vpn'             >> /etc/hosts
 
-          echo '173.20.0.2  cloud.${DOMAIN}'          >> /etc/hosts
-          echo '173.20.0.2  gitlab.${DOMAIN}'         >> /etc/hosts
-          echo '173.20.0.2  grafana.${DOMAIN}'        >> /etc/hosts
-          echo '173.20.0.2  portainer.${DOMAIN}'      >> /etc/hosts
-          echo '173.20.0.2  maxscale.${DOMAIN}'       >> /etc/hosts
-          echo '173.20.0.2  whoami.${DOMAIN}'         >> /etc/hosts
-          echo '173.20.0.2  api.${DOMAIN}'            >> /etc/hosts
+          echo '173.20.0.2  cloud.${DOMAIN}'     >> /etc/hosts
+          echo '173.20.0.2  gitlab.${DOMAIN}'    >> /etc/hosts
+          echo '173.20.0.2  grafana.${DOMAIN}'   >> /etc/hosts
+          echo '173.20.0.2  portainer.${DOMAIN}' >> /etc/hosts
+          echo '173.20.0.2  maxscale.${DOMAIN}'  >> /etc/hosts
+          echo '173.20.0.2  whoami.${DOMAIN}'    >> /etc/hosts
+          echo '173.20.0.2  api.${DOMAIN}'       >> /etc/hosts
 
-          [ -f \"/etc/openvpn/server/server.conf\" ] && {
-            cd /etc/openvpn/server
-            grep -qxF 'push \"dhcp-option DNS 10.8.0.1\"'    server.conf || {
-                 echo 'push \"dhcp-option DNS 10.8.0.1\"' >> server.conf
-                 echo 'plugin /usr/lib/openvpn/openvpn-auth-ldap.so \"/etc/openvpn/auth/auth-ldap.conf\"' >> server.conf
-                 echo 'client-cert-not-required' >> server.conf
-            }
-            dnsmasq
-            openvpn --config server.conf
+          dnsmasq
+          cd /etc/openvpn/server
+
+          [ -d /etc/openvpn/server/pki ] || {
+            /usr/share/easy-rsa/easyrsa --batch init-pki
+            /usr/share/easy-rsa/easyrsa --batch build-ca nopass
+            /usr/share/easy-rsa/easyrsa --batch build-server-full server nopass
+            /usr/share/easy-rsa/easyrsa --batch gen-dh
+            cat /etc/openvpn/server/pki/ca.crt
           }
-          touch /l.og && tail -F /l.og
+
+          echo 'LDAP_VPN_BASEDN=${LDAP_VPN_BASEDN}' >  .env
+          echo 'LDAP_VPN_FILTER=${LDAP_VPN_FILTER}' >> .env
+
+          openvpn --config server.conf
+          touch /l.og
+          tail -F /l.og
         "
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DATA_DIR}/vpn/etc/openvpn:/etc/openvpn
+      - ./resources/vpn/etc/openvpn/server/server.conf:/etc/openvpn/server/server.conf
+      - ./resources/vpn/etc/openvpn/server/ldap-check-user.sh:/etc/openvpn/server/ldap-check-user.sh
     networks:
       infra_network:
         ipv4_address: 173.20.0.4
