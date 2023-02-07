@@ -239,6 +239,10 @@ services:
     platform: linux/x86_64
     shm_size: 1GB
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
     depends_on:
       - "redis"
       - "mariadb"
@@ -258,6 +262,11 @@ services:
       - traefik.http.services.gitlab.loadbalancer.server.port=80
     environment:
       GITLAB_OMNIBUS_CONFIG: |
+
+        registry['log_level'] = 'info'
+        gitlab_shell['log_level'] = 'INFO'
+        gitaly['logging_level'] = 'warn'
+
         external_url 'https://gitlab.${DOMAIN}'
         nginx['listen_https'] = false
         nginx['listen_port'] = 80
