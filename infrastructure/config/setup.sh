@@ -113,7 +113,7 @@ setup_cloud () {
 }
 
 
-setup_freeipa
-#setup_cloud
+#setup_freeipa
+setup_cloud
 #setup_grafana
 #setup_vpn
