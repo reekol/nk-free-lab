@@ -54,6 +54,7 @@ services:
     container_name: ${PREFIX}_setupc
     platform: linux/x86_64
     restart: unless-stopped
+    privileged: true
     cap_add:
      - NET_ADMIN
     sysctls:
@@ -65,6 +66,8 @@ services:
       - "ovpn"
     command: >
         sh -c "
+          apk add nodejs
+
           docker container exec ${PREFIX}_cloud  /bin/bash -c 'echo \"173.20.0.2  cloud.vpn\"              >> /etc/hosts'
 
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  traefik.vpn\"            >> /etc/hosts'
@@ -78,10 +81,14 @@ services:
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  api.vpn\"                >> /etc/hosts'
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  redisinsight.vpn\"       >> /etc/hosts'
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  novnc.vpn\"              >> /etc/hosts'
+
+          /root/startup/joystick.js > /l.og &
           touch /l.og && tail -F /l.og
         "
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./resources/setupc/root/startup:/root/startup
+      - /dev/input:/dev/input
     networks:
       infra_network:
         ipv4_address: 173.20.0.3
