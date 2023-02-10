@@ -338,47 +338,47 @@ services:
         aliases:
           - alias.grafana.vpn
 
-  # nodeexporter:
-  #   image: prom/node-exporter:latest
-  #   hostname: h.nodeexporter.vpn
-  #   container_name: ${PREFIX}_nodeexporter
-  #   platform: linux/x86_64
-  #   restart: unless-stopped
-  #   volumes:
-  #     - /proc:/host/proc:ro
-  #     - /sys:/host/sys:ro
-  #     - /:/rootfs:ro
-  #   command:
-  #     --path.procfs=/host/proc
-  #     --path.rootfs=/rootfs
-  #     --path.sysfs=/host/sys
-  #     - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
-  #   networks:
-  #     infra_network:
-  #       ipv4_address: 173.20.0.9
-  #       aliases:
-  #         - alias.nodeexporter.vpn
+  nodeexporter:
+    image: prom/node-exporter:latest
+    hostname: h.nodeexporter.vpn
+    container_name: ${PREFIX}_nodeexporter
+    platform: linux/x86_64
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      --path.procfs=/host/proc
+      --path.rootfs=/rootfs
+      --path.sysfs=/host/sys
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    networks:
+      infra_network:
+        ipv4_address: 173.20.0.9
+        aliases:
+          - alias.nodeexporter.vpn
 
-#   prometheus:
-#     image: prom/prometheus:latest
-#     hostname: h.prometheus.vpn
-#     container_name: ${PREFIX}_prometheus
-#     platform: linux/x86_64
-#     restart: unless-stopped
-#     volumes:
-#       - ${DATA_DIR}/prometheus/etc/prometheus:/etc/prometheus
-#       - ${DATA_DIR}/prometheus/prometheus:/prometheus
-#     command:
-# #      --config.file=/etc/prometheus/prometheus.yml
-#       --storage.tsdb.path=/prometheus
-#       --web.console.libraries=/etc/prometheus/console_libraries
-#       --web.console.templates=/etc/prometheus/consoles
-#       --web.enable-lifecycle
-#     networks:
-#       infra_network:
-#         ipv4_address: 173.20.0.10
-#         aliases:
-#           - alias.prometheus.vpn
+  prometheus:
+    image: prom/prometheus:latest
+    hostname: h.prometheus.vpn
+    container_name: ${PREFIX}_prometheus
+    platform: linux/x86_64
+    restart: unless-stopped
+    volumes:
+      - ${DATA_DIR}/prometheus/etc/prometheus:/etc/prometheus
+      - ${DATA_DIR}/prometheus/prometheus:/prometheus
+    command:
+ #     --config.file=/etc/prometheus/prometheus.yml
+      --storage.tsdb.path=/prometheus
+      --web.console.libraries=/etc/prometheus/console_libraries
+      --web.console.templates=/etc/prometheus/consoles
+      --web.enable-lifecycle
+    networks:
+      infra_network:
+        ipv4_address: 173.20.0.10
+        aliases:
+          - alias.prometheus.vpn
 
   redis:
     image: redis:latest
