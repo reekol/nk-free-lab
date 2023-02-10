@@ -21,9 +21,9 @@ services:
       --log
       --accesslog
       --serverstransport.insecureskipverify=true
-      --certificatesresolvers.${PREFIX}_resolver.acme.tlschallenge=true
-      --certificatesresolvers.${PREFIX}_resolver.acme.email=${LETSENCRYPT_ACC_EMAIL}
-      --certificatesresolvers.${PREFIX}_resolver.acme.storage=/letsencrypt/acme.json
+      # --certificatesresolvers.${PREFIX}_resolver.acme.tlschallenge=true
+      # --certificatesresolvers.${PREFIX}_resolver.acme.email=${LETSENCRYPT_ACC_EMAIL}
+      # --certificatesresolvers.${PREFIX}_resolver.acme.storage=/letsencrypt/acme.json
     ports:
       - target: 443
         published: 443
@@ -35,8 +35,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DATA_DIR}/traefik/letsencrypt:/letsencrypt
     labels:
-      - traefik.http.routers.traefik.tls.certresolver=${PREFIX}_resolver
-      - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)
+#      - traefik.http.routers.traefik.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.traefik.rule=Host(`traefik.vpn`)
       - traefik.http.routers.traefik.entrypoints=https
       - traefik.http.routers.traefik.tls=true
       - traefik.http.routers.traefik.service=api@internal
@@ -46,12 +46,11 @@ services:
       infra_network:
         ipv4_address: 173.20.0.2
         aliases:
-          - traefik.alias.${DOMAIN}
-          - cloud.traefik
+          - alias.traefik.vpn
 
   setupc:
     image: docker:latest
-    hostname: setupc.${DOMAIN}
+    hostname: h.setupc.vpn
     container_name: ${PREFIX}_setupc
     platform: linux/x86_64
     restart: unless-stopped
@@ -63,29 +62,22 @@ services:
       - net.ipv6.conf.default.forwarding=1
     depends_on:
       - "cloud"
-      - "vpn"
+      - "ovpn"
     command: >
         sh -c "
-          docker container exec ${PREFIX}_cloud /bin/bash -c 'echo \"173.20.0.2  cloud.${DOMAIN}\"        >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  cloud.vpn\"              >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  gitlab.vpn\"             >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  grafana.vpn\"            >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  portainer.vpn\"          >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  maxscale.vpn\"           >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  whoami.vpn\"             >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  api.vpn\"                >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  redisinsight.vpn\"       >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  novnc.vpn\"              >> /etc/hosts'
+          docker container exec ${PREFIX}_cloud  /bin/bash -c 'echo \"173.20.0.2  cloud.vpn\"              >> /etc/hosts'
 
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  cloud.${DOMAIN}\"        >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  gitlab.${DOMAIN}\"       >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  grafana.${DOMAIN}\"      >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  portainer.${DOMAIN}\"    >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  maxscale.${DOMAIN}\"     >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  whoami.${DOMAIN}\"       >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  api.${DOMAIN}\"          >> /etc/hosts'
-          docker container exec ${PREFIX}_vpn   /bin/bash -c 'echo \"173.20.0.2  redisinsight.${DOMAIN}\" >> /etc/hosts'
-
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  traefik.vpn\"            >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  freeipaserver.vpn\"      >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  cloud.vpn\"              >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  gitlab.vpn\"             >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  grafana.vpn\"            >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  portainer.vpn\"          >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  maxscale.vpn\"           >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  whoami.vpn\"             >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  api.vpn\"                >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  redisinsight.vpn\"       >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  novnc.vpn\"              >> /etc/hosts'
           touch /l.og && tail -F /l.og
         "
     volumes:
@@ -94,12 +86,12 @@ services:
       infra_network:
         ipv4_address: 173.20.0.3
         aliases:
-          - setupc.alias.${DOMAIN}
+          - alias.setupc.vpn
 
-  vpn:
+  ovpn:
     image: debian:latest
-    hostname: vpn.${DOMAIN}
-    container_name: ${PREFIX}_vpn
+    hostname: h.ovpn.vpn
+    container_name: ${PREFIX}_ovpn
     platform: linux/x86_64
     restart: unless-stopped
     privileged: true
@@ -154,11 +146,11 @@ services:
       infra_network:
         ipv4_address: 173.20.0.4
         aliases:
-          - vpn.alias.${DOMAIN}
+          - alias.ovpn.vpn
 
   portainer:
     image: docker.io/portainer/portainer-ce:latest
-    hostname: portainer.${DOMAIN}
+    hostname: h.portainer.vpn
     container_name: ${PREFIX}_portainer
     platform: linux/x86_64
     command:
@@ -169,7 +161,7 @@ services:
     restart: always
     labels:
       - traefik.enable=true
-      - traefik.http.routers.portainer.rule=Host(`portainer.${DOMAIN}`, `portainer.vpn`)
+      - traefik.http.routers.portainer.rule=Host(`portainer.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.portainer.entrypoints=https
       - traefik.http.routers.portainer.tls=true
@@ -180,11 +172,11 @@ services:
       infra_network:
         ipv4_address: 173.20.0.5
         aliases:
-          - portainer.alias.${DOMAIN}
+          - alias.portainer.vpn
   # sudo -u www-data php occ config:system:set --value 0 remember_login_cookie_lifetime
   cloud:
     image: docker.io/nextcloud:latest
-    hostname: cloud.${DOMAIN}
+    hostname: h.cloud.vpn
     container_name: ${PREFIX}_cloud
     platform: linux/x86_64
     restart: unless-stopped
@@ -200,7 +192,7 @@ services:
       - ${DATA_DIR}/cloud/var/www/html/data:/var/www/html/data
     labels:
       - traefik.enable=true
-      - traefik.http.routers.cloud.rule=Host(`cloud.${DOMAIN}`,`cloud.vpn`)
+      - traefik.http.routers.cloud.rule=Host(`cloud.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.cloud.entrypoints=https
       - traefik.http.routers.cloud.tls=true
@@ -218,8 +210,8 @@ services:
 
     environment:
       - OVERWRITEPROTOCOL=https
-      - REDIS_HOST=redis.${DOMAIN}
-      - NEXTCLOUD_TRUSTED_DOMAINS=cloud.${DOMAIN},cloud.vpn
+      - REDIS_HOST=redis
+      - NEXTCLOUD_TRUSTED_DOMAINS=cloud.vpn
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
       - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
       - PHP_MEMORY_LIMIT=${NEXTCLOUD_PHP_MEMORY_LIMIT}
@@ -229,13 +221,13 @@ services:
       infra_network:
         ipv4_address: 173.20.0.6
         aliases:
-          - cloud.alias.${DOMAIN}
+          - alias.cloud.vpn
 
   gitlab:
     # Deactivate session by userid 34
     # gitlab-redis-cli DEL "session:gitlab:2::$( gitlab-redis-cli --scan --pattern 'session:user:gitlab:34:*' | cut -d':' -f7 )"
     image: docker.io/gitlab/gitlab-ce:latest
-    hostname: gitlab.${DOMAIN}
+    hostname: h.gitlab.vpn
     container_name: ${PREFIX}_gitlab
     platform: linux/x86_64
     shm_size: 1GB
@@ -254,7 +246,7 @@ services:
       - ${DATA_DIR}/gitlab/var/opt/gitlab:/var/opt/gitlab
     labels:
       - traefik.enable=true
-      - traefik.http.routers.gitlab.rule=Host(`gitlab.${DOMAIN}`, `gitlab.vpn`)
+      - traefik.http.routers.gitlab.rule=Host(`gitlab.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.gitlab.entrypoints=https
       - traefik.http.routers.gitlab.tls=true
@@ -267,7 +259,7 @@ services:
         gitlab_shell['log_level'] = 'INFO'
         gitaly['logging_level'] = 'warn'
 
-        external_url 'https://gitlab.${DOMAIN}'
+        external_url 'https://gitlab.vpn'
         nginx['listen_https'] = false
         nginx['listen_port'] = 80
         gitlab_rails['initial_root_password'] = "${GITLAB_ROOT_PASSWORD}"
@@ -281,7 +273,7 @@ services:
         redis['enable'] = false
 
         # Redis via TCP
-        gitlab_rails['redis_host'] = 'redis.${DOMAIN}'
+        gitlab_rails['redis_host'] = 'redis'
         gitlab_rails['redis_port'] = 6379
 
         # Ldap
@@ -292,7 +284,7 @@ services:
         gitlab_rails['ldap_servers'] = {
           'main' => {
             'label' => '${LDAP_GITLAB_SERVER_NAME}',
-            'host' =>  'freeipaserver.${DOMAIN}',
+            'host' =>  'freeipaserver',
             'port' => 636,
             'uid' => 'uid',
             'encryption' => 'simple_tls',
@@ -325,17 +317,17 @@ services:
       infra_network:
         ipv4_address: 173.20.0.7
         aliases:
-          - gitlab.alias.${DOMAIN}
+          - alias.gitlab.vpn
 
   grafana:
     image: docker.io/grafana/grafana-oss:latest
-    hostname: grafana.${DOMAIN}
+    hostname: h.grafana.vpn
     container_name: ${PREFIX}_grafana
     platform: linux/x86_64
     restart: unless-stopped
     labels:
       - traefik.enable=true
-      - traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN}`, `grafana.vpn`)
+      - traefik.http.routers.grafana.rule=Host(`grafana.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.grafana.entrypoints=https
       - traefik.http.routers.grafana.tls=true
@@ -344,53 +336,53 @@ services:
       infra_network:
         ipv4_address: 173.20.0.8
         aliases:
-          - grafana.alias.${DOMAIN}
+          - alias.grafana.vpn
 
-  node-exporter:
-    image: prom/node-exporter:latest
-    hostname: nodeexporter.${DOMAIN}
-    container_name: ${PREFIX}_node_exporter
-    platform: linux/x86_64
-    restart: unless-stopped
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      --path.procfs=/host/proc
-      --path.rootfs=/rootfs
-      --path.sysfs=/host/sys
-      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
-    networks:
-      infra_network:
-        ipv4_address: 173.20.0.9
-        aliases:
-          - nodeexporter.alias.${DOMAIN}
+  # nodeexporter:
+  #   image: prom/node-exporter:latest
+  #   hostname: h.nodeexporter.vpn
+  #   container_name: ${PREFIX}_nodeexporter
+  #   platform: linux/x86_64
+  #   restart: unless-stopped
+  #   volumes:
+  #     - /proc:/host/proc:ro
+  #     - /sys:/host/sys:ro
+  #     - /:/rootfs:ro
+  #   command:
+  #     --path.procfs=/host/proc
+  #     --path.rootfs=/rootfs
+  #     --path.sysfs=/host/sys
+  #     - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+  #   networks:
+  #     infra_network:
+  #       ipv4_address: 173.20.0.9
+  #       aliases:
+  #         - alias.nodeexporter.vpn
 
-  prometheus:
-    image: prom/prometheus:latest
-    hostname: prometheus.${DOMAIN}
-    container_name: ${PREFIX}_prometheus
-    platform: linux/x86_64
-    restart: unless-stopped
-    volumes:
-      - ${DATA_DIR}/prometheus/etc/prometheus:/etc/prometheus
-      - ${DATA_DIR}/prometheus/prometheus:/prometheus
-    command:
-#      --config.file=/etc/prometheus/prometheus.yml
-      --storage.tsdb.path=/prometheus
-      --web.console.libraries=/etc/prometheus/console_libraries
-      --web.console.templates=/etc/prometheus/consoles
-      --web.enable-lifecycle
-    networks:
-      infra_network:
-        ipv4_address: 173.20.0.10
-        aliases:
-          - prometheus.alias.${DOMAIN}
+#   prometheus:
+#     image: prom/prometheus:latest
+#     hostname: h.prometheus.vpn
+#     container_name: ${PREFIX}_prometheus
+#     platform: linux/x86_64
+#     restart: unless-stopped
+#     volumes:
+#       - ${DATA_DIR}/prometheus/etc/prometheus:/etc/prometheus
+#       - ${DATA_DIR}/prometheus/prometheus:/prometheus
+#     command:
+# #      --config.file=/etc/prometheus/prometheus.yml
+#       --storage.tsdb.path=/prometheus
+#       --web.console.libraries=/etc/prometheus/console_libraries
+#       --web.console.templates=/etc/prometheus/consoles
+#       --web.enable-lifecycle
+#     networks:
+#       infra_network:
+#         ipv4_address: 173.20.0.10
+#         aliases:
+#           - alias.prometheus.vpn
 
   redis:
     image: redis:latest
-    hostname: redis.${DOMAIN}
+    hostname: h.redis.vpn
     container_name: ${PREFIX}_redis
     platform: linux/x86_64
     restart: unless-stopped
@@ -402,11 +394,11 @@ services:
       infra_network:
         ipv4_address: 173.20.0.11
         aliases:
-          - redis.alias.${DOMAIN}
+          - alias.redis.vpn
 
   redisinsight:
     image: redislabs/redisinsight:latest
-    hostname: redisinsight.${DOMAIN}
+    hostname: h.redisinsight.vpn
     container_name: ${PREFIX}_redisinsight
     platform: linux/x86_64
     restart: unless-stopped
@@ -414,10 +406,10 @@ services:
       - "redis"
     environment:
       - RIPROXYENABLE=true
-      - RITRUSTEDORIGINS=https://redisinsight.${DOMAIN}
+      - RITRUSTEDORIGINS=https://redisinsight.vpn
     labels:
       - traefik.enable=true
-      - traefik.http.routers.redisinsight.rule=Host(`redisinsight.${DOMAIN}`,`redisinsight.vpn`)
+      - traefik.http.routers.redisinsight.rule=Host(`redisinsight.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.redisinsight.entrypoints=https
       - traefik.http.routers.redisinsight.tls=true
@@ -427,7 +419,7 @@ services:
       infra_network:
         ipv4_address: 173.20.0.12
         aliases:
-          - redisinsight.alias.${DOMAIN}
+          - alias.redisinsight.vpn
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -445,17 +437,17 @@ services:
       infra_network:
         ipv4_address: 173.20.0.13
         aliases:
-          - cadvisor.alias.${DOMAIN}
+          - alias.cadvisor.vpn
 
   gotify:
     image: gotify/server
     container_name: ${PREFIX}_gotify
-    hostname: gotify.${DOMAIN}
+    hostname: h.gotify.vpn
     platform: linux/x86_64
     restart: unless-stopped
     labels:
       - traefik.enable=true
-      - traefik.http.routers.gotify.rule=Host(`gotify.${DOMAIN}`)
+      - traefik.http.routers.gotify.rule=Host(`gotify.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.gotify.entrypoints=https
       - traefik.http.routers.gotify.tls=true
@@ -464,7 +456,7 @@ services:
       infra_network:
         ipv4_address: 173.20.0.14
         aliases:
-          - gotify.alias.${DOMAIN}
+          - alias.gotify.vpn
 
   mariadb:
     # Prepare backup
@@ -475,7 +467,7 @@ services:
 
     image: mariadb:latest
     restart: unless-stopped
-    hostname: mariadb.${DOMAIN}
+    hostname: h.mariadb.vpn
     container_name: ${PREFIX}_mariadb
     platform: linux/x86_64
     healthcheck:
@@ -491,17 +483,17 @@ services:
       infra_network:
         ipv4_address: 173.20.0.15
         aliases:
-          - mariadb.alias.${DOMAIN}
+          - alias.mariadb.vpn
 
   maxscale:
     image: mariadb/maxscale:latest
     restart: unless-stopped
-    hostname: maxscale.${DOMAIN}
+    hostname: h.maxscale.vpn
     container_name: ${PREFIX}_maxscale
     platform: linux/x86_64
     labels:
       - traefik.enable=true
-      - traefik.http.routers.maxscale.rule=Host(`maxscale.${DOMAIN}`, `maxscale.vpn`)
+      - traefik.http.routers.maxscale.rule=Host(`maxscale.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.maxscale.entrypoints=https
       - traefik.http.routers.maxscale.tls=true
@@ -512,12 +504,12 @@ services:
       infra_network:
         ipv4_address: 173.20.0.16
         aliases:
-          - maxscale.alias.${DOMAIN}
+          - alias.maxscale.vpn
 
   freeipaserver: #kinit && ipa
     image: freeipa/freeipa-server:fedora-37
     restart: unless-stopped
-    hostname: freeipaserver.${DOMAIN}
+    hostname: h.freeipaserver.vpn
     container_name: ${PREFIX}_freeipaserver
     platform: linux/x86_64
     privileged: true
@@ -527,18 +519,18 @@ services:
     command:
       --no-ntp
     environment:
-      - IPA_SERVER_HOSTNAME=freeipaserver.${DOMAIN}
-      - IPA_SERVER_INSTALL_OPTS=-U -r ${DOMAIN}
+      - IPA_SERVER_HOSTNAME=h.freeipaserver.vpn
+      - IPA_SERVER_INSTALL_OPTS=-U -r freeipaserver.vpn
       - PASSWORD=${FREEIPASERVER_ADMIN_PASSWORD} # at least 8 characters
       - VIRTUAL_PROTO=https
-      - VIRTUAL_HOST=freeipaserver.${DOMAIN}
+      - VIRTUAL_HOST=https://freeipaserver.vpn
       - VIRTUAL_PORT=443
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
     labels:
       - traefik.enable=true
-      - traefik.http.routers.freeipaserver.tls.certresolver=${PREFIX}_resolver
-      - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.${DOMAIN}`)
+#      - traefik.http.routers.freeipaserver.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.freeipaserver.entrypoints=https
       - traefik.http.routers.freeipaserver.tls=true
@@ -549,17 +541,17 @@ services:
       infra_network:
         ipv4_address: 173.20.0.17
         aliases:
-          - freeipaserver.alias.${DOMAIN}
+          - alias.freeipaserver.vpn
 
   whoami:
     image: traefik/whoami
     restart: unless-stopped
-    hostname: whoami.hostnamae.${DOMAIN}
+    hostname: h.whoami.vpn
     container_name: ${PREFIX}_whoami
     platform: linux/x86_64
     labels:
       - traefik.enable=true
-      - traefik.http.routers.whoami.rule=Host(`whoami.${DOMAIN}`, `whoami.vpn`)
+      - traefik.http.routers.whoami.rule=Host(`whoami.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.whoami.entrypoints=https
       - traefik.http.routers.whoami.tls=true
@@ -570,19 +562,19 @@ services:
       infra_network:
         ipv4_address: 173.20.0.18
         aliases:
-          - whoami.alias.${DOMAIN}
+          - alias.whoami.vpn
 
-  project:
+  api:
     build:
       context: "./resources/project"
     restart: unless-stopped
-    hostname: project.${DOMAIN}
-    container_name: ${PREFIX}_project
+    hostname: api.vpn
+    container_name: ${PREFIX}_api
     platform: linux/x86_64
     volumes:
-      - ${DATA_DIR}/project/project:/project
+      - ${DATA_DIR}/api/project:/project
     environment:
-      - DOMAIN=${DOMAIN}
+      - DOMAIN=api.vpn
       - PROJECT_DB_HOST=${PROJECT_DB_HOST}
       - PROJECT_DB_DATABASE=${PROJECT_DB_DATABASE}
       - PROJECT_DB_USERNAME=${PROJECT_DB_USERNAME}
@@ -593,24 +585,24 @@ services:
       - LDAP_APACHE_AuthLDAPBindPassword=${LDAP_APACHE_AuthLDAPBindPassword}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.project.rule=Host(`project.${DOMAIN}`,`api.${DOMAIN}`, `api.vpn`)
+      - traefik.http.routers.api.rule=Host(`api.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
-      - traefik.http.routers.project.entrypoints=https
-      - traefik.http.routers.project.tls=true
-      - traefik.http.services.project.loadbalancer.passhostheader=true
-      - traefik.http.services.project.loadbalancer.server.scheme=http
-      - traefik.http.services.project.loadbalancer.server.port=80
+      - traefik.http.routers.api.entrypoints=https
+      - traefik.http.routers.api.tls=true
+      - traefik.http.services.api.loadbalancer.passhostheader=true
+      - traefik.http.services.api.loadbalancer.server.scheme=http
+      - traefik.http.services.api.loadbalancer.server.port=80
     networks:
       infra_network:
         ipv4_address: 173.20.0.19
         aliases:
-          - project.alias.${DOMAIN}
+          - alias.api.vpn
 
   novnc:
     build:
       context: "./resources/novnc"
     restart: unless-stopped
-    hostname: novnc.${DOMAIN}
+    hostname: h.novnc.vpn
     container_name: ${PREFIX}_novnc
     platform: linux/x86_64
     volumes:
@@ -623,7 +615,7 @@ services:
       - NOVNC_WIDTH=${NOVNC_WIDTH}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.novnc.rule=Host(`novnc.${DOMAIN}`,`novnc.vpn`)
+      - traefik.http.routers.novnc.rule=Host(`novnc.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.novnc.entrypoints=https,vnc
       - traefik.http.routers.novnc.tls=true
@@ -634,7 +626,7 @@ services:
       infra_network:
         ipv4_address: 173.20.0.20
         aliases:
-          - novnc.alias.${DOMAIN}
+          - alias.novnc.vpn
 
 networks:
   infra_network:
