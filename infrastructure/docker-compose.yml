@@ -88,18 +88,18 @@ services:
     restart: unless-stopped
     privileged: true
     extra_hosts:
-      - 173.20.0.2:traefik.${FQDN}
-      - 173.20.0.2:freeipaserver.${FQDN}
-      - 173.20.0.2:cloud.${FQDN}
-      - 173.20.0.2:colabora.${FQDN}
-      - 173.20.0.2:gitlab.${FQDN}
-      - 173.20.0.2:grafana.${FQDN}
-      - 173.20.0.2:portainer.${FQDN}
-      - 173.20.0.2:maxscale.${FQDN}
-      - 173.20.0.2:whoami.${FQDN}
-      - 173.20.0.2:api.${FQDN}
-      - 173.20.0.2:redisinsight.${FQDN}
-      - 173.20.0.2:novnc.${FQDN}
+      - traefik.${FQDN}:173.20.0.2
+      - freeipaserver.${FQDN}:173.20.0.2
+      - cloud.${FQDN}:173.20.0.2
+      - colabora.${FQDN}:173.20.0.2
+      - gitlab.${FQDN}:173.20.0.2
+      - grafana.${FQDN}:173.20.0.2
+      - portainer.${FQDN}:173.20.0.2
+      - maxscale.${FQDN}:173.20.0.2
+      - whoami.${FQDN}:173.20.0.2
+      - api.${FQDN}:173.20.0.2
+      - redisinsight.${FQDN}:173.20.0.2
+      - novnc.${FQDN}:173.20.0.2
     cap_add:
      - NET_ADMIN
     sysctls:
@@ -183,7 +183,7 @@ services:
         ipv4_address: 173.20.0.5
         aliases:
           - alias.portainer.vpn
-
+  # sudo -u www-data php occ config:system:set --value 0 remember_login_cookie_lifetime
   cloud:
     image: docker.io/nextcloud:latest
     hostname: h.cloud.vpn
