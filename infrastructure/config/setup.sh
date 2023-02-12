@@ -56,7 +56,7 @@ setup_cloud () {
 
         sudo -u www-data php -d memory_limit=512M occ config:system:set overwriteprotocol  --value='https'
         sudo -u www-data php -d memory_limit=512M occ config:system:set datadirectory --value='/var/www/html/data'
-        sudo -u www-data php -d memory_limit=512M occ config:system:set overwrite.cli.url --value='https://cloud.vpn'
+        sudo -u www-data php -d memory_limit=512M occ config:system:set overwrite.cli.url --value='http://h.cloud.vpn'
         sudo -u www-data php -d memory_limit=512M occ config:system:set redis host --value='redis'
         sudo -u www-data php -d memory_limit=512M occ config:system:set redis port --value=6379 --type=integer
         sudo -u www-data php -d memory_limit=512M occ config:system:set redis password --value=''
@@ -66,10 +66,10 @@ setup_cloud () {
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value true allow_local_remote_servers --type=boolean
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value 0 remember_login_cookie_lifetime
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.2'     trusted_proxies 0
-        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.vpn'      trusted_proxies 1
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'h.cloud.vpn'    trusted_proxies 1
 
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.${FQDN}'  trusted_domains 0
-        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.vpn'      trusted_domains 1
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'h.cloud.vpn'    trusted_domains 1
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.2'     trusted_domains 2
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.4'     trusted_domains 3
 
@@ -88,7 +88,7 @@ setup_cloud () {
         sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapBaseUsers        '${LDAP_NEXTCLOUD_ldapBaseUsers}'
         sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapConfigurationActive 1
 
-        sudo -u www-data php -d memory_limit=512M occ app:enable richdocumentscode
+#        sudo -u www-data php -d memory_limit=512M occ app:enable richdocumentscode
         sudo -u www-data php -d memory_limit=512M occ app:enable  \\
             spreed \\
             calendar \\
