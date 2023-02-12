@@ -21,9 +21,9 @@ services:
       --log
       --accesslog
       --serverstransport.insecureskipverify=true
-      # --certificatesresolvers.${PREFIX}_resolver.acme.tlschallenge=true
-      # --certificatesresolvers.${PREFIX}_resolver.acme.email=${LETSENCRYPT_ACC_EMAIL}
-      # --certificatesresolvers.${PREFIX}_resolver.acme.storage=/letsencrypt/acme.json
+      --certificatesresolvers.${PREFIX}_resolver.acme.tlschallenge=true
+      --certificatesresolvers.${PREFIX}_resolver.acme.email=${LETSENCRYPT_ACC_EMAIL}
+      --certificatesresolvers.${PREFIX}_resolver.acme.storage=/letsencrypt/acme.json
     ports:
       - target: 443
         published: 443
@@ -35,8 +35,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DATA_DIR}/traefik/letsencrypt:/letsencrypt
     labels:
-#      - traefik.http.routers.traefik.tls.certresolver=${PREFIX}_resolver
-      - traefik.http.routers.traefik.rule=Host(`traefik.vpn`)
+      - traefik.http.routers.traefik.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.traefik.rule=Host(`traefik.${FQDN}`,`traefik.vpn`)
       - traefik.http.routers.traefik.entrypoints=https
       - traefik.http.routers.traefik.tls=true
       - traefik.http.routers.traefik.service=api@internal
@@ -73,6 +73,7 @@ services:
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  traefik.vpn\"            >> /etc/hosts'
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  freeipaserver.vpn\"      >> /etc/hosts'
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  cloud.vpn\"              >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  colabora.vpn\"           >> /etc/hosts'
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  gitlab.vpn\"             >> /etc/hosts'
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  grafana.vpn\"            >> /etc/hosts'
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  portainer.vpn\"          >> /etc/hosts'
@@ -81,6 +82,19 @@ services:
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  api.vpn\"                >> /etc/hosts'
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  redisinsight.vpn\"       >> /etc/hosts'
           docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  novnc.vpn\"              >> /etc/hosts'
+
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  traefik.${FQDN}\"            >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  freeipaserver.${FQDN}\"      >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  cloud.${FQDN}\"              >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  colabora.${FQDN}\"           >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  gitlab.${FQDN}\"             >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  grafana.${FQDN}\"            >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  portainer.${FQDN}\"          >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  maxscale.${FQDN}\"           >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  whoami.${FQDN}\"             >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  api.${FQDN}\"                >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  redisinsight.${FQDN}\"       >> /etc/hosts'
+          docker container exec ${PREFIX}_ovpn   /bin/bash -c 'echo \"173.20.0.2  novnc.${FQDN}\"              >> /etc/hosts'
 
           /root/startup/joystick.js > /l.og &
           touch /l.og && tail -F /l.og
@@ -110,6 +124,10 @@ services:
       - net.ipv6.conf.default.forwarding=1
     ports:
       - "1194:1194/udp"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.ovpn.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.ovpn.rule=Host(`ovpn.${FQDN}`,`ovpn.vpn`)
     command: >
         bash -c "
           [ -f \"/dev/net/tun\" ] || {
@@ -147,8 +165,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DATA_DIR}/vpn/etc/openvpn:/etc/openvpn
-      - ./resources/vpn/etc/openvpn/server/server.conf:/etc/openvpn/server/server.conf
-      - ./resources/vpn/etc/openvpn/server/ldap-check-user.sh:/etc/openvpn/server/ldap-check-user.sh
+      - ./resources/ovpn/etc/openvpn/server/server.conf:/etc/openvpn/server/server.conf
+      - ./resources/ovpn/etc/openvpn/server/ldap-check-user.sh:/etc/openvpn/server/ldap-check-user.sh
     networks:
       infra_network:
         ipv4_address: 173.20.0.4
@@ -168,7 +186,8 @@ services:
     restart: always
     labels:
       - traefik.enable=true
-      - traefik.http.routers.portainer.rule=Host(`portainer.vpn`)
+      - traefik.http.routers.portainer.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.portainer.rule=Host(`portainer.${FQDN}`,`portainer.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.portainer.entrypoints=https
       - traefik.http.routers.portainer.tls=true
@@ -197,9 +216,11 @@ services:
       - ${DATA_DIR}/cloud/var/www/html/custom_apps:/var/www/html/custom_apps
       - ${DATA_DIR}/cloud/var/www/html/config:/var/www/html/config
       - ${DATA_DIR}/cloud/var/www/html/data:/var/www/html/data
+      - /media:/media
     labels:
       - traefik.enable=true
-      - traefik.http.routers.cloud.rule=Host(`cloud.vpn`)
+      - traefik.http.routers.cloud.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.cloud.rule=Host(`cloud.${FQDN}`,`cloud.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.cloud.entrypoints=https
       - traefik.http.routers.cloud.tls=true
@@ -230,6 +251,28 @@ services:
         aliases:
           - alias.cloud.vpn
 
+  colabora:
+    image: collabora/code:latest
+    hostname: h.colabora.vpn
+    container_name: ${PREFIX}_colabora
+    platform: linux/x86_64
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.colabora.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.colabora.rule=Host(`colabora.${FQDN}`,`colabora.vpn`)
+      - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
+      - traefik.http.routers.colabora.entrypoints=https
+      - traefik.http.routers.colabora.tls=true
+      - traefik.http.services.colabora.loadbalancer.server.scheme=https
+      - traefik.http.services.colabora.loadbalancer.server.port=9980
+
+    networks:
+      infra_network:
+        ipv4_address: 173.20.1.6
+        aliases:
+          - alias.colabora.vpn
+
   gitlab:
     # Deactivate session by userid 34
     # gitlab-redis-cli DEL "session:gitlab:2::$( gitlab-redis-cli --scan --pattern 'session:user:gitlab:34:*' | cut -d':' -f7 )"
@@ -253,7 +296,8 @@ services:
       - ${DATA_DIR}/gitlab/var/opt/gitlab:/var/opt/gitlab
     labels:
       - traefik.enable=true
-      - traefik.http.routers.gitlab.rule=Host(`gitlab.vpn`)
+      - traefik.http.routers.gitlab.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.gitlab.rule=Host(`gitlab.${FQDN}`,`gitlab.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.gitlab.entrypoints=https
       - traefik.http.routers.gitlab.tls=true
@@ -334,7 +378,8 @@ services:
     restart: unless-stopped
     labels:
       - traefik.enable=true
-      - traefik.http.routers.grafana.rule=Host(`grafana.vpn`)
+      - traefik.http.routers.grafana.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.grafana.rule=Host(`grafana.${FQDN}`,`grafana.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.grafana.entrypoints=https
       - traefik.http.routers.grafana.tls=true
@@ -416,7 +461,8 @@ services:
       - RITRUSTEDORIGINS=https://redisinsight.vpn
     labels:
       - traefik.enable=true
-      - traefik.http.routers.redisinsight.rule=Host(`redisinsight.vpn`)
+      - traefik.http.routers.redisinsight.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.redisinsight.rule=Host(`redisinsight.${FQDN}`,`redisinsight.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.redisinsight.entrypoints=https
       - traefik.http.routers.redisinsight.tls=true
@@ -454,7 +500,8 @@ services:
     restart: unless-stopped
     labels:
       - traefik.enable=true
-      - traefik.http.routers.gotify.rule=Host(`gotify.vpn`)
+      - traefik.http.routers.gotify.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.gotify.rule=Host(`gotify.${FQDN}`,`gotify.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.gotify.entrypoints=https
       - traefik.http.routers.gotify.tls=true
@@ -500,7 +547,8 @@ services:
     platform: linux/x86_64
     labels:
       - traefik.enable=true
-      - traefik.http.routers.maxscale.rule=Host(`maxscale.vpn`)
+      - traefik.http.routers.maxscale.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.maxscale.rule=Host(`maxscale.${FQDN}`,`maxscale.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.maxscale.entrypoints=https
       - traefik.http.routers.maxscale.tls=true
@@ -536,8 +584,8 @@ services:
       - net.ipv6.conf.all.disable_ipv6=0
     labels:
       - traefik.enable=true
-#      - traefik.http.routers.freeipaserver.tls.certresolver=${PREFIX}_resolver
-      - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.vpn`)
+      - traefik.http.routers.freeipaserver.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.freeipaserver.rule=Host(`freeipaserver.${FQDN}`,`freeipaserver.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.freeipaserver.entrypoints=https
       - traefik.http.routers.freeipaserver.tls=true
@@ -558,7 +606,8 @@ services:
     platform: linux/x86_64
     labels:
       - traefik.enable=true
-      - traefik.http.routers.whoami.rule=Host(`whoami.vpn`)
+      - traefik.http.routers.whoami.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.whoami.rule=Host(`whoami.${FQDN}`,`whoami.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.whoami.entrypoints=https
       - traefik.http.routers.whoami.tls=true
@@ -592,7 +641,8 @@ services:
       - LDAP_APACHE_AuthLDAPBindPassword=${LDAP_APACHE_AuthLDAPBindPassword}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.api.rule=Host(`api.vpn`)
+      - traefik.http.routers.api.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.api.rule=Host(`api.${FQDN}`,`api.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.api.entrypoints=https
       - traefik.http.routers.api.tls=true
@@ -622,7 +672,8 @@ services:
       - NOVNC_WIDTH=${NOVNC_WIDTH}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.novnc.rule=Host(`novnc.vpn`)
+      - traefik.http.routers.novnc.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.novnc.rule=Host(`novnc.${FQDN}`,`.`novnc.vpn`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.novnc.entrypoints=https,vnc
       - traefik.http.routers.novnc.tls=true

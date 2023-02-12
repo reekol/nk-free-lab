@@ -37,6 +37,11 @@ setup_freeipa () {
 
 setup_cloud () {
 
+    docker container exec ${PREFIX}_mariadb mysql \
+        -u${NEXTCLOUD_DB_USER} \
+        -p${NEXTCLOUD_DB_PASSWORD} \
+        -e "DROP DATABASE IF EXISTS cloud"
+
     docker container exec ${PREFIX}_cloud /bin/bash -c "
         apt-get update && apt-get -y install sudo vim
 
@@ -60,12 +65,13 @@ setup_cloud () {
 
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value true allow_local_remote_servers --type=boolean
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value 0 remember_login_cookie_lifetime
-        sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.2' trusted_proxies 0
-        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.vpn' trusted_proxies 1
-        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.vpn' trusted_domains 0
-        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.vpn'  trusted_domains 1
-        sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.2' trusted_domains 2
-        sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.4' trusted_domains 3
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.2'     trusted_proxies 0
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.vpn'      trusted_proxies 1
+
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.${FQDN}'  trusted_domains 0
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'cloud.vpn'      trusted_domains 1
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.2'     trusted_domains 2
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value '173.20.0.4'     trusted_domains 3
 
         sudo -u www-data php -d memory_limit=512M occ app:install user_ldap
         sudo -u www-data php -d memory_limit=512M occ app:enable  user_ldap
@@ -113,7 +119,7 @@ setup_cloud () {
 }
 
 
-setup_freeipa
-#setup_cloud
+#setup_freeipa
+setup_cloud
 #setup_grafana
 #setup_vpn
