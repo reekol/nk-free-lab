@@ -11,6 +11,7 @@
 - Maxscale ( Database Manager and monitoring )
 - Grafana ( Genaral monitoring tool ) 
 - API ( Laravel based API build around OpenAPI Specification with integrated Swagger sanbox ) 
+- Redis ( Centralised user sessions cache storage )
 
 ### 1) Openvpn.
 
