@@ -6,6 +6,7 @@
 - Traefik (Loadballancer, TLS cert, resolver, lb and inbound trafic manager )
 - Freeipaserver (Identity managenent system)
 - Nextcloud ( Document Storage, Chats, Calendars, Contacts )
+- Colabora CODE service ( Service for colaborative documents editing using open office backend ) 
 - Gitlab ( Source and CI/CD )
 - Mariadb ( Database )
 - Maxscale ( Database Manager and monitoring )
@@ -58,5 +59,6 @@ FreeIPA can be accessed by admins on freeipaserver.$(FQDN:-example.com}. Only us
 ### 3) Nextcloud
   ISO complient cloud for storing documents, calendars, contacts and handling internal company's communications.
   Login using ldap (FreeIPA) credentions, for acive users in _employee_cloud group.
+  
   
   
