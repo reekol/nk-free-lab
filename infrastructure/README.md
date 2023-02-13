@@ -1,6 +1,12 @@
 # Office dev infrastructure
 
-# Stack
+# Overview
+
+Configure behind NAT and forward ports
+tcp:80   (http)    Temporary:   for TLS certificates creation   only
+tcp:443  (https)   Temporary:   for TLS certificates validation only
+udp:1194 (openvpn) Permanently: for VPN access.
+
 
 - Openvpn ( vpn with dnsmasq for internal dns resolver )
 - Traefik (Loadballancer, TLS cert, resolver, lb and inbound trafic manager )
