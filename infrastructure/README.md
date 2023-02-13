@@ -32,7 +32,7 @@ While form inside of the vpn, their TLS certificates are valid while resolving t
 ### 3) FreeIPA - Server.
 
 Identity management system that stores all the Users and groups.
-Initial setup is located in ./config/setup.sh script
+Initial setup is located in ./config/setup.sh script with ./config/.env.dev variables
 
 Basic users and groups:
 
@@ -53,3 +53,10 @@ LDAP_GROUP_GRAFANA="${PREFIX}_employee_grafana" # Group for users with access to
 LDAP_GROUP_VPN="${PREFIX}_employee_vpn"         # Group for users with access to VPN       Service *NOTE All other services are in a VPNetwork! 
 
 ```
+FreeIPA can be accessed by admins on freeipaserver.$(FQDN:-example.com}. Only users from GROUP ipausers, can log in.
+
+### 3) Nextcloud
+  ISO complient cloud for storing documents, calendars, contacts and handling internal company's communications.
+  Login using ldap (FreeIPA) credentions, for acive users in _employee_cloud group.
+  
+  
