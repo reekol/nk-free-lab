@@ -15,10 +15,10 @@
 - Redis ( Centralised user sessions cache storage )
 
 ### 1) Openvpn.
-Based on Debian image.
-The entyre infrastructure sits inside of private network. 
-All of the other services can beaccessed only from inside of it.
-Connected to LDAP (FreeIPA), allows users from  _employee_vpn  group to login.
+- Based on Debian image.
+- The entire infrastructure sits inside a private network.
+- All of the other services can be accessed only from inside it.
+- Connected to LDAP (FreeIPA), allows users from _employee_vpn group to login.
 
 ```
 Network segmentation based on user roles (configured in a docker-compose.yml)
@@ -26,9 +26,9 @@ Network segmentation based on user roles (configured in a docker-compose.yml)
 
 ### 2) Traefik
 
-Generates, maintains, resolves certificates and URI-s from inside of VPN.
-Keep in mind that while it generates valid certificates for each of the cervices of the cluster, thay are not reachable from outside of it.
-While form inside of the vpn, their TLS certificates are valid while resolving them from private network addresses!
+- Generates, maintains, resolves certificates and URI-s from inside of VPN.
+- Keep in mind that while it generates valid certificates for each of the cervices of the cluster, thay are not reachable from outside of it.
+- While form inside of the vpn, their TLS certificates are valid also while accessing them from private network addresses!
 
 ### 3) FreeIPA - Server.
 
@@ -54,25 +54,25 @@ LDAP_GROUP_GRAFANA="${PREFIX}_employee_grafana" # Group for users with access to
 LDAP_GROUP_VPN="${PREFIX}_employee_vpn"         # Group for users with access to VPN       Service *NOTE All other services are in a VPNetwork! 
 
 ```
-FreeIPA can be accessed by admins on freeipaserver.$(FQDN:-example.com}. Only users from GROUP ipausers, can log in.
+- FreeIPA can be accessed by administrators on freeipa server.$(FQDN:-example.com}. Only users from GROUP ipausers, can log in.
 
 ### 4) Nextcloud
-  ISO complient cloud for storing documents, calendars, contacts and handling internal company's communications.
+  ISO complient, selfhosted cloud for storing documents, calendars, contacts and handling internal company's communications.
   Login using ldap (FreeIPA) credentions, for acive users in _employee_cloud group.
-  
+
   Implements CODE (Colabora) services for editing documents.
-  Open osurce Apps available for: Linux, Android, M$, Apple, Iphone.
+  Open source Apps available for: Linux, Android, M$, Apple, Iphone.
   
 ### 5) Colabora
-  This service is not, separetly used. It is used as a service by Nextcloud to edit documents online.
+  It is used as a service by Nextcloud to edit documents online.
   
 ### 6) Gitlab:
-   We all know what this is ... do we :) 
+   We all know what this is, do we :)
    CI/CD Platform. 
    Login using LDAP Credentilas for acive users in _employee_gitlab group.
    
 ### 7) Mariadb
-   Main database storate for this infrastructure.
+   Main database storage for this infrastructure.
    Contains Nextcloud and API settings.
    
 ### 8) Maxscale
@@ -80,25 +80,26 @@ FreeIPA can be accessed by admins on freeipaserver.$(FQDN:-example.com}. Only us
   
 ### 9) Grafana
    Basic monitoring visualisation tool.
-   *(Kibana + Elastic shoulld be added to )
+   (Kibana + Elastic should be added to )
    Credentials: Ldap for acive users in _employee_grafana group.
-   
+
 ### 10) Api
-  Api may be used for automations, reporting, develeopement, etc. 
-  Added basic Api model builder, complient with OpenAIP v3 specification.
-  Added Atomatic doocumentation builder + Sandbox ( Swagger ).
-  Utilises 2 auth profiles.
-  _Read  profile: accessible for users from _api_read group.
-  _Write profile: accessible for users from _api_write group.
-  
+  - API may be used for automations, reporting, develeopement, etc.
+  - Added basic Api model builder, complient with OpenAPI v3 specification.
+  - Added atomatic doocumentation builder + Sandbox ( Swagger ).
+  - Utilises 2 auth profiles.
+  - + _Read  profile: accessible for users from _api_read group.
+  - + _Write profile: accessible for users from _api_write group.
+  - Authenticate using basic auth behind apache2's ldap plugin
+
 ### 11) Redis
-  Stores the sessiona from Gitlab, Nextcloud, Api. 
-  Clearen them from here, will immediatly invalidate active user seession from corresponding services. 
-  Should be usebmosly for automations. 
+  - Stores the sessiona from Gitlab, Nextcloud, Api.
+  - Clearing them from here, will immediately invalidate active user session from corresponding services.
   
 ### 11.1) Redisinsights
-  WEB Ui manager for redis.
+  WEB Ui manager for Redis from redis  project.
  
+
 #  TODO:
  Add Elastic and Kibana.
  Lock containers versions.
