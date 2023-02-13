@@ -56,9 +56,33 @@ LDAP_GROUP_VPN="${PREFIX}_employee_vpn"         # Group for users with access to
 ```
 FreeIPA can be accessed by admins on freeipaserver.$(FQDN:-example.com}. Only users from GROUP ipausers, can log in.
 
-### 3) Nextcloud
+### 4) Nextcloud
   ISO complient cloud for storing documents, calendars, contacts and handling internal company's communications.
   Login using ldap (FreeIPA) credentions, for acive users in _employee_cloud group.
   
+  Implements CODE (Colabora) services for editing documents.
+  Open osurce Apps available for: Linux, Android, M$, Apple, Iphone.
   
+### 5) Colabora
+  This service is not, separetly used. It is used as a service by Nextcloud to edit documents online.
   
+### 6) Gitlab:
+   We all know what this is ... do we :) 
+   CI/CD Platform. 
+   Login using LDAP Credentilas for acive users in _employee_gitlab group.
+   
+### 7) Mariadb
+   Main database storate for this infrastructure.
+   Contains Nextcloud and API settings.
+   
+### 8) Maxscale
+   Monitoring and database adminisration tool by mariadb project.
+  
+### 9) Grafana
+   Basic monitoring visualisation tool.
+   *(Kibana + Elastic shoulld be added to )
+   Credentials: Ldap for acive users in _employee_grafana group.
+   
+### 10) Api
+
+### 11) Redis
