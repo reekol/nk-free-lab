@@ -84,12 +84,21 @@ FreeIPA can be accessed by admins on freeipaserver.$(FQDN:-example.com}. Only us
    Credentials: Ldap for acive users in _employee_grafana group.
    
 ### 10) Api
-
+  Api may be used for automations, reporting, develeopement, etc. 
+  Added basic Api model builder, complient with OpenAIP v3 specification.
+  Added Atomatic doocumentation builder + Sandbox ( Swagger ).
+  Utilises 2 auth profiles.
+  _Read  profile: accessible for users from _api_read group.
+  _Write profile: accessible for users from _api_write group.
+  
 ### 11) Redis
-
-
-
-
+  Stores the sessiona from Gitlab, Nextcloud, Api. 
+  Clearen them from here, will immediatly invalidate active user seession from corresponding services. 
+  Should be usebmosly for automations. 
+  
+### 11.1) Redisinsights
+  WEB Ui manager for redis.
+ 
 #  TODO:
  Add Elastic and Kibana.
  Lock containers versions.
