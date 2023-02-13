@@ -15,7 +15,7 @@
 - Redis ( Centralised user sessions cache storage )
 
 ### 1) Openvpn.
-
+Based on Debian image.
 The entyre infrastructure sits inside of private network. 
 All of the other services can beaccessed only from inside of it.
 Connected to LDAP (FreeIPA), allows users from  _employee_vpn  group to login.
