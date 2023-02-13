@@ -67,8 +67,9 @@ LDAP_GROUP_VPN="${PREFIX}_employee_vpn"         # Group for users with access to
 - FreeIPA can be accessed by administrators on freeipa server.$(FQDN:-example.com}. Only users from GROUP ipausers, can log in.
 
 ### 4) Nextcloud
+ [config/setup.sh#L38](config/setup.sh#L38)
   ISO complient, selfhosted cloud for storing documents, calendars, contacts and handling internal company's communications.
-  Login using ldap (FreeIPA) credentions, for acive users in _employee_cloud group.
+  Login using ldap (FreeIPA) credentions, for acive users in _employee_cloud group. [config/.env.dev#L52](config/.env.dev#L52)
 
   Implements CODE (Colabora) services for editing documents.
   Open source Apps available for: Linux, Android, M$, Apple, Iphone.
@@ -79,7 +80,7 @@ LDAP_GROUP_VPN="${PREFIX}_employee_vpn"         # Group for users with access to
 ### 6) Gitlab:
    We all know what this is, do we :)
    CI/CD Platform. 
-   Login using LDAP Credentilas for acive users in _employee_gitlab group.
+   Login using LDAP Credentilas for acive users in _employee_gitlab group. [config/.env.dev#L46](config/.env.dev#L46)
    
 ### 7) Mariadb
    Main database storage for this infrastructure.
@@ -95,10 +96,10 @@ LDAP_GROUP_VPN="${PREFIX}_employee_vpn"         # Group for users with access to
 
 ### 10) Api
   - API may be used for automations, reporting, develeopement, etc.
-  - Added basic Api model builder, complient with OpenAPI v3 specification.
+  - Added basic Api model builder, complient with OpenAPI v3 specification. [resources/project](resources/project)
   - Added atomatic doocumentation builder + Sandbox ( Swagger ).
-  - Utilises 2 auth profiles.
-  - + _Read  profile: accessible for users from _api_read group.
+  - Utilises 2 auth profiles. [config/.env.dev#L61](config/.env.dev#L61)
+  - + _Read  profile: accessible for users from _api_read group. 
   - + _Write profile: accessible for users from _api_write group.
   - Authenticate using basic auth behind apache2's ldap plugin
 
