@@ -86,3 +86,10 @@ FreeIPA can be accessed by admins on freeipaserver.$(FQDN:-example.com}. Only us
 ### 10) Api
 
 ### 11) Redis
+
+
+
+
+#  TODO:
+ Add Elastic and Kibana.
+ Lock containers versions.
