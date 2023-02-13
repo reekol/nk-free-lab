@@ -203,7 +203,7 @@ services:
         ipv4_address: 173.20.0.5
         aliases:
           - alias.portainer.vpn
-  # sudo -u www-data php occ config:system:set --value 0 remember_login_cookie_lifetime
+
   cloud:
     image: docker.io/nextcloud:latest
     hostname: h.cloud.vpn
