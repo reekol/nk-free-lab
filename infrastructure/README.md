@@ -37,13 +37,13 @@ Initial setup is located in ./config/setup.sh script
 Basic users and groups:
 
 ```
-LDAP_GROUP_SERVICES="${PREFIX}_services"      # Services Bind users (are/should be) part of this Group.
+LDAP_GROUP_SERVICES="${PREFIX}_services"        # Services Bind users (are/should be) part of this Group.
 
-LDAP_USER_SERVICE_APACHE=service.apache       # Bind user for Api        service to check for credentials 
-LDAP_USER_SERVICE_GITLAB=service.gitlab       # Bind user for Gitlab     service to check for credentials 
-LDAP_USER_SERVICE_CLOUD=service.cloud         # Bind user for Nextcloud  service to check for credentials 
-LDAP_USER_SERVICE_GRAFANA=service.grafana     # Bind user for Grafana    service to check for credentials 
-LDAP_USER_SERVICE_VPN=service.vpn             # Bind user for VPN        service to check for credentials 
+LDAP_USER_SERVICE_APACHE=service.apache         # Bind user for Api        service to check for credentials 
+LDAP_USER_SERVICE_GITLAB=service.gitlab         # Bind user for Gitlab     service to check for credentials 
+LDAP_USER_SERVICE_CLOUD=service.cloud           # Bind user for Nextcloud  service to check for credentials 
+LDAP_USER_SERVICE_GRAFANA=service.grafana       # Bind user for Grafana    service to check for credentials 
+LDAP_USER_SERVICE_VPN=service.vpn               # Bind user for VPN        service to check for credentials 
 
 LDAP_GROUP_API_READ="${PREFIX}_api_read"        # Group for users with READ  access to Api Service
 LDAP_GROUP_API_WRITE="${PREFIX}_api_write"      # Group for users with WRITE access to Api Service
