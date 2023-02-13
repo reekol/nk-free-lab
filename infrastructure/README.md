@@ -22,6 +22,7 @@
 - Redis ( Centralised user sessions cache storage )
 
 ### 1) Openvpn.
+[docker-compose.yml#L115](docker-compose.yml#L115)
 - Based on Debian image.
 - The entire infrastructure sits inside a private network.
 - All of the other services can be accessed only from inside it.
@@ -38,6 +39,8 @@ Network segmentation based on user roles (configured in a docker-compose.yml)
 - While form inside of the vpn, their TLS certificates are valid also while accessing them from private network addresses!
 
 ### 3) FreeIPA - Server.
+
+[config/setup.sh#L3](config/setup.sh#L3)
 
 Identity management system that stores all the Users and groups.
 Initial setup is located in ./config/setup.sh script with ./config/.env.dev variables
