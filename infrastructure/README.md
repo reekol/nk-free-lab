@@ -26,7 +26,7 @@
 - Based on Debian image.
 - The entire infrastructure sits inside a private network.
 - All of the other services can be accessed only from inside it.
-- Connected to LDAP (FreeIPA), allows users from _employee_vpn group to login.
+- Connected to LDAP (FreeIPA), allows users from _employee_vpn group to login. [resources/ovpn/etc/openvpn/server](resources/ovpn/etc/openvpn/server)
 
 ```
 Network segmentation based on user roles (configured in a docker-compose.yml)
