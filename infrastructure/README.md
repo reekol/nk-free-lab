@@ -3,7 +3,7 @@
 # Stack
 
 - Openvpn ( vpn with dnsmasq for internal dns resolver )
-- Traefik (Loadballancer, lb and certificate manager for inbound services )
+- Traefik (Loadballancer, TLS cert, resolver, lb and inbound trafic manager )
 - Freeipaserver (Identity managenent system)
 - Nextcloud ( Document Storage, Chats, Calendars, Contacts )
 - Gitlab ( Source and CI/CD )
