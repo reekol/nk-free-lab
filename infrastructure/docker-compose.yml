@@ -128,6 +128,26 @@ services:
           iptables -I FORWARD -s 10.8.0.0/24 -j ACCEPT
           iptables -I FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
 
+          # TODO Network segmentation by roles
+          #
+          # System administrators -- full access to all machines on the network
+          # Employees -- access only to Samba/email server
+          # Contractors -- access to a special server only
+
+          # Class       Virtual IP Range    Allowed LAN Access                  Common Names
+          # Employees   10.8.0.0/24         Samba/email server at 10.66.4.4     [variable]
+          # SystemAdmin 10.8.1.0/24         Entire 10.66.4.0/24 subnet          sysadmin1
+          # Contractors 10.8.2.0/24         Contractor server at 10.66.4.12     contractor1, contracter2
+
+          # Employee rule
+          iptables -A FORWARD -i tun0 -s 10.8.0.0/24 -d 10.66.4.4 -j ACCEPT
+
+          # Sysadmin rule
+          iptables -A FORWARD -i tun0 -s 10.8.1.0/24 -d 10.66.4.0/24 -j ACCEPT
+
+          # Contractor rule
+          iptables -A FORWARD -i tun0 -s 10.8.2.0/24 -d 10.66.4.12 -j ACCEPT
+
           dnsmasq
           cd /etc/openvpn/server
 
