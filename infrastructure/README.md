@@ -34,7 +34,7 @@ Network segmentation based on user roles (configured in a docker-compose.yml)
 ### 2) Traefik
 
 - Generates, maintains, resolves certificates and URI-s from inside of VPN.
-- Keep in mind that while it generates valid certificates for each of the cervices of the cluster, thay are not reachable from outside of it.
+- Keep in mind that while it generates valid certificates for each of the services of the cluster, thay are not reachable from outside of it.
 - While form inside of the vpn, their TLS certificates are valid also while accessing them from private network addresses!
 
 ### 3) FreeIPA - Server.
