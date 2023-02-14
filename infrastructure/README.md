@@ -20,6 +20,7 @@
 - Grafana ( Genaral monitoring tool ) 
 - API ( Laravel based API build around OpenAPI Specification with integrated Swagger sanbox ) 
 - Redis ( Centralised user sessions cache storage )
+- Portainer ( swarm manager with web gui )
 
 ### 1) Openvpn.
 [docker-compose.yml#L115](docker-compose.yml#L115)
@@ -110,7 +111,9 @@ LDAP_GROUP_VPN="${PREFIX}_employee_vpn"         # Group for users with access to
 ### 11.1) Redisinsights
   WEB Ui manager for Redis from redis  project.
  
-
+### 12 ) Portainer
+  Manage, log, stats, cli, for containers in this swarm
+  
 #  TODO:
  Add Elastic and Kibana.
  Lock containers versions.
