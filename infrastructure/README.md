@@ -114,6 +114,38 @@ LDAP_GROUP_VPN="${PREFIX}_employee_vpn"         # Group for users with access to
 ### 12 ) Portainer
   Manage, log, stats, cli, for containers in this swarm
   
+
+## How to Install/Setup/Run
+1) Setup: Edit variables in ./config/.env.dev
+```
+PREFIX=cb # Desired prefix for container naming
+
+LETSENCRYPT_ACC_EMAIL="john@example.com" # your email for LETSENCRYPT
+FQDN=example.com # your public domain to host the infrastructure
+
+MASTER_USER=root # Default root acc for all services that requre it.
+MASTER_PASS=${MASTERPASS} # use: export MASTERPASS=mysecretpass before staring this swarm
+
+DEMO_USER=demo # Demo account for the vpn and services
+DEMO_PASS=demo #
+
+DATA_DIR="/home/reekol/data" # Root of your storage directory. used for date persistance
+```
+2) Start:
+```
+export MASTERPASS=mysecretpass
+docker compose --env-file=./config/.env.dev up
+```
+
+3 ) After all containers are started and healthy, use initial setup script to setup freeipa and nexcloud default users and settings.
+
+```
+export MASTERPASS=mysecretpass
+cd ./config
+bash setup.sh
+```
+
+
 #  TODO:
  Add Elastic and Kibana.
  Lock containers versions.
