@@ -137,13 +137,14 @@ export MASTERPASS=mysecretpass
 docker compose --env-file=./config/.env.dev up
 ```
 
-3 ) After all containers are started and healthy, use initial setup script to setup freeipa and nexcloud default users and settings.
+3) After all containers are started and healthy, use initial setup script to setup freeipa and nexcloud default users and settings.
 
 ```
 export MASTERPASS=mysecretpass
 cd ./config
 bash setup.sh
 ```
+
 
 
 #  TODO:

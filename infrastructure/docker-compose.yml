@@ -64,9 +64,11 @@ services:
     depends_on:
       - "cloud"
       - "ovpn"
+      - "grafana"
     command: >
         sh -c "
           apk add nodejs
+
           /root/startup/joystick.js > /l.og &
           touch /l.og && tail -F /l.og
         "
@@ -385,6 +387,15 @@ services:
     container_name: ${PREFIX}_grafana
     platform: linux/x86_64
     restart: unless-stopped
+    environment:
+      - LDAP_GRAFANA_BIND_DN=${LDAP_GRAFANA_BIND_DN}
+      - LDAP_BIND_PASSWORD=${LDAP_BIND_PASSWORD}
+      - LDAP_GROUP_GRAFANA=${LDAP_GROUP_GRAFANA}
+      - LDAP_DC=${LDAP_DC}
+    volumes:
+      - ./resources/grafana/etc/grafana/ldap.toml:/etc/grafana/ldap.toml
+      - ./resources/grafana/etc/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ${DATA_DIR}/grafana/var/lib/grafana/plugins:/var/lib/grafana/plugins
     labels:
       - traefik.enable=true
       - traefik.http.routers.grafana.tls.certresolver=${PREFIX}_resolver
