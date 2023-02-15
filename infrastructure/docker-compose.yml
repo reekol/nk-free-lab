@@ -388,6 +388,9 @@ services:
     platform: linux/x86_64
     restart: unless-stopped
     environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
       - LDAP_GRAFANA_BIND_DN=${LDAP_GRAFANA_BIND_DN}
       - LDAP_BIND_PASSWORD=${LDAP_BIND_PASSWORD}
       - LDAP_GROUP_GRAFANA=${LDAP_GROUP_GRAFANA}
@@ -421,10 +424,10 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      --path.procfs=/host/proc
-      --path.rootfs=/rootfs
-      --path.sysfs=/host/sys
-      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     networks:
       infra_network:
         ipv4_address: 173.20.0.9
@@ -438,11 +441,11 @@ services:
     platform: linux/x86_64
     restart: unless-stopped
     volumes:
-      - ${DATA_DIR}/prometheus/etc/prometheus:/etc/prometheus
-      - ${DATA_DIR}/prometheus/prometheus:/prometheus
+      - ./resources/prometheus/etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     command:
- #     --config.file=/etc/prometheus/prometheus.yml
+      --config.file=/etc/prometheus/prometheus.yml
       --storage.tsdb.path=/prometheus
+      --storage.tsdb.retention=168h
       --web.console.libraries=/etc/prometheus/console_libraries
       --web.console.templates=/etc/prometheus/consoles
       --web.enable-lifecycle
