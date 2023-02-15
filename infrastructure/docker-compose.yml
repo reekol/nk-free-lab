@@ -102,6 +102,7 @@ services:
       - api.${FQDN}:173.20.0.2
       - redisinsight.${FQDN}:173.20.0.2
       - novnc.${FQDN}:173.20.0.2
+      - gotify.${FQDN}:173.20.0.2
     cap_add:
      - NET_ADMIN
     sysctls:
@@ -317,6 +318,7 @@ services:
     environment:
       GITLAB_OMNIBUS_CONFIG: |
 
+        prometheus['listen_address'] = '0.0.0.0:9090'
         registry['log_level'] = 'info'
         gitlab_shell['log_level'] = 'INFO'
         gitaly['logging_level'] = 'warn'
@@ -529,6 +531,7 @@ services:
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
       - traefik.http.routers.gotify.entrypoints=https
       - traefik.http.routers.gotify.tls=true
+      - traefik.http.services.gotify.loadbalancer.server.scheme=http
       - traefik.http.services.gotify.loadbalancer.server.port=80
     networks:
       infra_network:
