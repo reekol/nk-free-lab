@@ -18,4 +18,4 @@ email =  "email"
 
 [[servers.group_mappings]]
 group_dn = "cn=${LDAP_GROUP_GRAFANA},cn=groups,cn=accounts,${LDAP_DC}"
-org_role = "Admin"
+org_role = "Editor"

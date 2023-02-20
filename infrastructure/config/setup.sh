@@ -88,6 +88,15 @@ setup_cloud () {
         sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapBaseUsers        '${LDAP_NEXTCLOUD_ldapBaseUsers}'
         sudo -u www-data php -d memory_limit=512M occ ldap:set-config s01 ldapConfigurationActive 1
 
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value true enable_previews --type=boolean
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'OC\Preview\Image'    enabledPreviewProviders 0
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'OC\Preview\Movie'    enabledPreviewProviders 1
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'OC\Preview\TXT'      enabledPreviewProviders 2
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'OC\Preview\MP3'      enabledPreviewProviders 3
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'OC\Preview\MKV'      enabledPreviewProviders 4
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'OC\Preview\MP4'      enabledPreviewProviders 5
+        sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'OC\Preview\AVI'      enabledPreviewProviders 6
+
 #        sudo -u www-data php -d memory_limit=512M occ app:enable richdocumentscode
         sudo -u www-data php -d memory_limit=512M occ app:enable  \\
             spreed \\
