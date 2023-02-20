@@ -43,7 +43,7 @@ setup_cloud () {
         -e "DROP DATABASE IF EXISTS cloud"
 
     docker container exec ${PREFIX}_cloud /bin/bash -c "
-        apt-get update && apt-get -y install sudo vim
+        apt-get update && apt-get -y install sudo vim ffmpeg imagemagick
 
         sudo -u www-data php -d memory_limit=512M occ maintenance:install \\
         --database='mysql' \\
@@ -96,6 +96,7 @@ setup_cloud () {
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'OC\\Preview\\MKV'     enabledPreviewProviders 4
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'OC\\Preview\\MP4'     enabledPreviewProviders 5
         sudo -u www-data php -d memory_limit=512M occ config:system:set --value 'OC\\Preview\\AVI'     enabledPreviewProviders 6
+        sudo -u www-data php -d memory_limit=512M occ maintenance:mimetype:update-db
 
 #        sudo -u www-data php -d memory_limit=512M occ app:enable richdocumentscode
         sudo -u www-data php -d memory_limit=512M occ app:enable  \\
