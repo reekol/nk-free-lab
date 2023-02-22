@@ -68,7 +68,6 @@ services:
     command: >
         sh -c "
           apk add nodejs
-          # ffmpeg -v debug -hide_banner -y -loglevel error -rtsp_transport tcp -use_wallclock_as_timestamps 1 -i rtsp://coldborn.com:8001/live -vcodec copy -acodec copy -f segment -reset_timestamps 1 -segment_time 6\00 -segment_format mkv -segment_atclocktime 1 -strftime 1 %Y%m%dT%H%M%S.mkv
           /root/startup/joystick.js > /l.og &
           touch /l.og && tail -F /l.og
         "
