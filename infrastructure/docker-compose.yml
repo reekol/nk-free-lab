@@ -317,6 +317,9 @@ services:
   gitlab:
     # Deactivate session by userid 34
     # gitlab-redis-cli DEL "session:gitlab:2::$( gitlab-redis-cli --scan --pattern 'session:user:gitlab:34:*' | cut -d':' -f7 )"
+    # Register runner
+    # docker run --rm -t -i gitlab/gitlab-runner register --non-interactive --locked=false --name=${PREFIX}_runner_1 --url=https://gitlab.${FQDN}/ --registration-token=${REG_TOKEN} --executor=docker --docker-image=docker:alpine --docker-volumes=/var/run/docker.sock:/var/run/docker.sock
+
     image: docker.io/gitlab/gitlab-ce:latest
     hostname: h.gitlab.vpn
     container_name: ${PREFIX}_gitlab
@@ -352,7 +355,7 @@ services:
         gitlab_shell['log_level'] = 'INFO'
         gitaly['logging_level'] = 'warn'
 
-        external_url 'https://gitlab.vpn'
+        external_url 'https://gitlab.${FQDN}'
         nginx['listen_https'] = false
         nginx['listen_port'] = 80
         gitlab_rails['initial_root_password'] = "${GITLAB_ROOT_PASSWORD}"
