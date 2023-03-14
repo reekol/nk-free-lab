@@ -230,6 +230,8 @@ services:
       - /media:/media
     labels:
       - traefik.enable=true
+#      - traefik.http.middlewares.test-ipwhitelist.ipwhitelist.sourcerange=10.8.0.131, 192.168.1.7
+#      - traefik.http.middlewares.test-ipwhitelist.ipwhitelist.ipstrategy.depth=2"
       - traefik.http.routers.cloud.tls.certresolver=${PREFIX}_resolver
       - traefik.http.routers.cloud.rule=Host(`cloud.${FQDN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
