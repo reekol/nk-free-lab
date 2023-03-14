@@ -417,6 +417,70 @@ services:
         aliases:
           - alias.gitlab.vpn
 
+  dind:
+    image: docker:20-dind
+    restart: always
+    privileged: true
+    extra_hosts:
+      - gitlab.${FQDN}:173.20.0.2
+    depends_on:
+      - "gitlab"
+    environment:
+      DOCKER_TLS_CERTDIR: ""
+    command:
+      - --storage-driver=overlay2
+    networks:
+      infra_network:
+        ipv4_address: 173.20.1.7
+        aliases:
+          - alias.dind.vpn
+
+  runner:
+    restart: always
+    image: registry.gitlab.com/gitlab-org/gitlab-runner:alpine
+    extra_hosts:
+      - gitlab.${FQDN}:173.20.0.2
+    depends_on:
+      - "dind"
+      - "gitlab"
+    environment:
+      - DOCKER_HOST=tcp://dind:2375
+    volumes:
+      - ./resources/runner/etc/gitlab-runner:/etc/gitlab-runner:z
+    networks:
+      infra_network:
+        ipv4_address: 173.20.2.7
+        aliases:
+          - runner.gitlab.vpn
+
+
+  register-runner:
+    restart: 'no'
+    image: registry.gitlab.com/gitlab-org/gitlab-runner:alpine
+    depends_on:
+      - "dind"
+      - "gitlab"
+    extra_hosts:
+      - gitlab.${FQDN}:173.20.0.2
+    environment:
+      - CI_SERVER_URL=https://gitlab.${FQDN}
+      - REGISTRATION_TOKEN=${CI_RUNNER_TOKEN}
+    command:
+      - register
+      - --non-interactive
+      - --locked=false
+      - --name=${PREFIX}_runner_1
+      - --executor=docker
+      - --docker-image=docker:20-dind
+      - --docker-volumes=/var/run/docker.sock:/var/run/docker.sock
+    volumes:
+      - ./resources/runner/etc/gitlab-runner:/etc/gitlab-runner:z
+    networks:
+      infra_network:
+        ipv4_address: 173.20.3.7
+        aliases:
+          - register-runner.gitlab.vpn
+
   grafana:
     image: docker.io/grafana/grafana-oss:latest
     hostname: h.grafana.vpn

@@ -1,0 +1,27 @@
+concurrent = 4
+check_interval = 0
+log_level = "warning"
+shutdown_timeout = 0
+
+[session_server]
+  session_timeout = 1800
+
+[[runners]]
+  name = "cb_runner_1"
+  url = "https://gitlab.coldborn.com"
+  id = 6
+  token = "ezuzy3vGuvKzmGEvG1Jn"
+  token_obtained_at = 2023-03-14T13:30:09Z
+  token_expires_at = 0001-01-01T00:00:00Z
+  executor = "docker"
+  [runners.cache]
+    MaxUploadedArchiveSize = 0
+  [runners.docker]
+    tls_verify = false
+    image = "docker:20-dind"
+    privileged = false
+    disable_entrypoint_overwrite = false
+    oom_kill_disable = false
+    disable_cache = false
+    volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
+    shm_size = 0
