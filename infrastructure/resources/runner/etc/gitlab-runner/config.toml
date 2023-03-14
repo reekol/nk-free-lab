@@ -20,6 +20,7 @@ shutdown_timeout = 0
     tls_verify = false
     image = "docker:20-dind"
     privileged = false
+    extra_hosts = ["gitlab.coldborn.com:173.20.0.2"]
     disable_entrypoint_overwrite = false
     oom_kill_disable = false
     disable_cache = false
