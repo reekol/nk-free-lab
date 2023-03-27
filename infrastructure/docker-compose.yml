@@ -36,7 +36,7 @@ services:
       - ${DATA_DIR}/traefik/letsencrypt:/letsencrypt
     labels:
       - traefik.http.routers.traefik.tls.certresolver=${PREFIX}_resolver
-      - traefik.http.routers.traefik.rule=Host(`traefik.${FQDN}`::)
+      - traefik.http.routers.traefik.rule=Host(`traefik.${FQDN}`)
       - traefik.http.routers.traefik.entrypoints=https
       - traefik.http.routers.traefik.tls=true
       - traefik.http.routers.traefik.service=api@internal
@@ -201,6 +201,9 @@ services:
       - traefik.http.services.portainer.loadbalancer.passhostheader=true
       - traefik.http.services.portainer.loadbalancer.server.scheme=https
       - traefik.http.services.portainer.loadbalancer.server.port=9443
+
+      - traefik.http.middlewares.portainer-whitelist.ipwhitelist.sourcerange=173.20.0.4
+      - traefik.http.routers.portainer.middlewares=portainer-whitelist@docker
     networks:
       infra_network:
         ipv4_address: 173.20.0.5
@@ -230,8 +233,6 @@ services:
       - /media:/media
     labels:
       - traefik.enable=true
-#      - traefik.http.middlewares.test-ipwhitelist.ipwhitelist.sourcerange=10.8.0.131, 192.168.1.7
-#      - traefik.http.middlewares.test-ipwhitelist.ipwhitelist.ipstrategy.depth=2"
       - traefik.http.routers.cloud.tls.certresolver=${PREFIX}_resolver
       - traefik.http.routers.cloud.rule=Host(`cloud.${FQDN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
@@ -239,16 +240,17 @@ services:
       - traefik.http.routers.cloud.tls=true
       - traefik.http.services.cloud.loadbalancer.server.port=80
 
-      - traefik.http.middlewares.nc-header.headers.stsSeconds=31536000
-      - traefik.http.middlewares.nc-header.headers.forceSTSHeader=true
-      - traefik.http.middlewares.nc-header.headers.stsPreload=true
-      - traefik.http.middlewares.nc-header.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.cloud-header.headers.stsSeconds=31536000
+      - traefik.http.middlewares.cloud-header.headers.forceSTSHeader=true
+      - traefik.http.middlewares.cloud-header.headers.stsPreload=true
+      - traefik.http.middlewares.cloud-header.headers.stsIncludeSubdomains=true
 
-      - traefik.http.middlewares.nc-dav.replacepathregex.regex=^/.well-known/ca(l|rd)dav
-      - traefik.http.middlewares.nc-dav.replacepathregex.replacement=/remote.php/dav/
+      - traefik.http.middlewares.cloud-dav.replacepathregex.regex=^/.well-known/ca(l|rd)dav
+      - traefik.http.middlewares.cloud-dav.replacepathregex.replacement=/remote.php/dav/
 
-      - traefik.http.routers.cloud.middlewares=nc-dav,nc-header
+      - traefik.http.middlewares.cloud-whitelist.ipwhitelist.sourcerange=173.20.0.4, 173.20.0.2, 173.20.1.6, 173.20.2.6
 
+      - traefik.http.routers.cloud.middlewares=cloud-dav,cloud-header,cloud-whitelist@docker
     environment:
       - OVERWRITEPROTOCOL=https
       - REDIS_HOST=redis
@@ -282,6 +284,9 @@ services:
       - traefik.http.services.colabora.loadbalancer.server.scheme=https
       - traefik.http.services.colabora.loadbalancer.server.port=9980
 
+      - traefik.http.middlewares.colabora-whitelist.ipwhitelist.sourcerange=173.20.0.4, 173.20.0.2, 173.20.0.6
+
+      - traefik.http.routers.colabora.middlewares=colabora-whitelist@docker
     networks:
       infra_network:
         ipv4_address: 173.20.1.6
@@ -309,6 +314,10 @@ services:
       - traefik.http.routers.onlyoffice.tls=true
       - traefik.http.services.onlyoffice.loadbalancer.server.scheme=http
       - traefik.http.services.onlyoffice.loadbalancer.server.port=80
+
+      - traefik.http.middlewares.onlyoffice-whitelist.ipwhitelist.sourcerange=173.20.0.4, 173.20.0.2, 173.20.0.6
+
+      - traefik.http.routers.onlyoffice.middlewares=onlyoffice-whitelist@docker
 
     networks:
       infra_network:
@@ -349,6 +358,9 @@ services:
       - traefik.http.routers.gitlab.tls=true
       - traefik.http.services.gitlab.loadbalancer.server.scheme=http
       - traefik.http.services.gitlab.loadbalancer.server.port=80
+
+      - traefik.http.middlewares.gitlab-whitelist.ipwhitelist.sourcerange=173.20.0.4
+      - traefik.http.routers.gitlab.middlewares=gitlab-whitelist@docker
     environment:
       GITLAB_OMNIBUS_CONFIG: |
 
@@ -483,6 +495,9 @@ services:
       - traefik.http.routers.grafana.entrypoints=https
       - traefik.http.routers.grafana.tls=true
       - traefik.http.services.grafana.loadbalancer.server.port=3000
+
+      - traefik.http.middlewares.grafana-whitelist.ipwhitelist.sourcerange=173.20.0.4
+      - traefik.http.routers.grafana.middlewares=grafana-whitelist@docker
     networks:
       infra_network:
         ipv4_address: 173.20.0.8
@@ -567,6 +582,9 @@ services:
       - traefik.http.routers.redisinsight.tls=true
       - traefik.http.services.redisinsight.loadbalancer.server.port=8001
 
+      - traefik.http.middlewares.redisinsight-whitelist.ipwhitelist.sourcerange=173.20.0.4
+      - traefik.http.routers.redisinsight.middlewares=redisinsight-whitelist@docker
+
     networks:
       infra_network:
         ipv4_address: 173.20.0.12
@@ -607,6 +625,10 @@ services:
       - traefik.http.routers.gotify.tls=true
       - traefik.http.services.gotify.loadbalancer.server.scheme=http
       - traefik.http.services.gotify.loadbalancer.server.port=80
+
+      - traefik.http.middlewares.gotify-whitelist.ipwhitelist.sourcerange=173.20.0.4
+      - traefik.http.routers.gotify.middlewares=gotify-whitelist@docker
+
     networks:
       infra_network:
         ipv4_address: 173.20.0.14
@@ -656,6 +678,10 @@ services:
       - traefik.http.services.maxscale.loadbalancer.passhostheader=true
       - traefik.http.services.maxscale.loadbalancer.server.scheme=http
       - traefik.http.services.maxscale.loadbalancer.server.port=8989
+
+      - traefik.http.middlewares.maxscale-whitelist.ipwhitelist.sourcerange=173.20.0.4
+      - traefik.http.routers.maxscale.middlewares=maxscale-whitelist@docker
+
     networks:
       infra_network:
         ipv4_address: 173.20.0.16
@@ -693,6 +719,10 @@ services:
       - traefik.http.services.freeipaserver.loadbalancer.passhostheader=true
       - traefik.http.services.freeipaserver.loadbalancer.server.scheme=https
       - traefik.http.services.freeipaserver.loadbalancer.server.port=443
+
+      - traefik.http.middlewares.freeipaserver-whitelist.ipwhitelist.sourcerange=173.20.0.4
+      - traefik.http.routers.freeipaserver.middlewares=freeipaserver-whitelist@docker
+
     networks:
       infra_network:
         ipv4_address: 173.20.0.17
@@ -781,6 +811,10 @@ services:
       - traefik.http.services.novnc.loadbalancer.passhostheader=false
       - traefik.http.services.novnc.loadbalancer.server.scheme=http
       - traefik.http.services.novnc.loadbalancer.server.port=80
+
+      - traefik.http.middlewares.novnc-whitelist.ipwhitelist.sourcerange=173.20.0.4
+      - traefik.http.routers.novnc.middlewares=novnc-whitelist@docker
+
     networks:
       infra_network:
         ipv4_address: 173.20.0.20
