@@ -8,7 +8,7 @@ shutdown_timeout = 0
 
 [[runners]]
   name = "cb_runner_1"
-  url = "https://gitlab.coldborn.com"
+  url = "https://gitlab.coldborn.com/"
   id = 6
   token = "ezuzy3vGuvKzmGEvG1Jn"
   token_obtained_at = 2023-03-14T13:30:09Z

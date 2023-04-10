@@ -359,7 +359,7 @@ services:
       - traefik.http.services.gitlab.loadbalancer.server.scheme=http
       - traefik.http.services.gitlab.loadbalancer.server.port=80
 
-      - traefik.http.middlewares.gitlab-whitelist.ipwhitelist.sourcerange=173.20.0.4
+      - traefik.http.middlewares.gitlab-whitelist.ipwhitelist.sourcerange=173.20.0.4, 173.20.1.7, 173.20.2.7
       - traefik.http.routers.gitlab.middlewares=gitlab-whitelist@docker
     environment:
       GITLAB_OMNIBUS_CONFIG: |
