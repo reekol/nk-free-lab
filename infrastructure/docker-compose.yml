@@ -821,6 +821,55 @@ services:
         aliases:
           - alias.novnc.vpn
 
+
+  zoneminder:
+    image: ghcr.io/zoneminder-containers/zoneminder-base:latest
+    restart: always
+    stop_grace_period: 45s
+    depends_on:
+      - "mariadb"
+    hostname: h.zoneminder.vpn
+    container_name: ${PREFIX}_zoneminder
+    platform: linux/x86_64
+    volumes:
+      - ${DATA_DIR}/zoneminder/data:/data
+      - ${DATA_DIR}/zoneminder/config:/config
+      - ${DATA_DIR}/zoneminder/log1:/log
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 1000000000
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_USER=mysqluser
+      - MYSQL_PASSWORD=mysqlpassword
+      - TZ=America/Chicago
+      - MAX_LOG_SIZE_BYTES=1000000
+      - MAX_LOG_NUMBER=20
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_ADDRESS=coolemail@gmail.com
+      - EMAIL_PASSWORD=very_secure_password
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.zoneminder.tls.certresolver=${PREFIX}_resolver
+      - traefik.http.routers.zoneminder.rule=Host(`zoneminder.${FQDN}`)
+      - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
+      - traefik.http.routers.zoneminder.entrypoints=https,vnc
+      - traefik.http.routers.zoneminder.tls=true
+      - traefik.http.services.zoneminder.loadbalancer.passhostheader=false
+      - traefik.http.services.zoneminder.loadbalancer.server.scheme=http
+      - traefik.http.services.zoneminder.loadbalancer.server.port=80
+
+      - traefik.http.middlewares.zoneminder-whitelist.ipwhitelist.sourcerange=173.20.0.4
+      - traefik.http.routers.zoneminder.middlewares=novnc-whitelist@docker
+
+    networks:
+      infra_network:
+        ipv4_address: 173.20.0.21
+        aliases:
+          - alias.zoneminder.vpn
+
 networks:
   infra_network:
     driver: bridge
