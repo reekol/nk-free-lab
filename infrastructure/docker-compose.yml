@@ -834,7 +834,7 @@ services:
     volumes:
       - ${DATA_DIR}/zoneminder/data:/data
       - ${DATA_DIR}/zoneminder/config:/config
-      - ${DATA_DIR}/zoneminder/log1:/log
+      - ${DATA_DIR}/zoneminder/log:/log
       - type: tmpfs
         target: /dev/shm
         tmpfs:
