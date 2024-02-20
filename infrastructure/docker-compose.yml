@@ -840,16 +840,16 @@ services:
         tmpfs:
           size: 1000000000
     environment:
-      - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_USER=mysqluser
-      - MYSQL_PASSWORD=mysqlpassword
-      - TZ=America/Chicago
-      - MAX_LOG_SIZE_BYTES=1000000
-      - MAX_LOG_NUMBER=20
-      - EMAIL_HOST=smtp.gmail.com
-      - EMAIL_PORT=587
-      - EMAIL_ADDRESS=coolemail@gmail.com
-      - EMAIL_PASSWORD=very_secure_password
+      - MYSQL_ROOT_PASSWORD=${ZONEMINDER_MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=${ZONEMINDER_MYSQL_USER}
+      - MYSQL_PASSWORD=${ZONEMINDER_MYSQL_PASSWORD}
+      - TZ=${ZONEMINDER_TZ}
+      - MAX_LOG_SIZE_BYTES=${ZONEMINDER_MAX_LOG_SIZE_BYTES}
+      - MAX_LOG_NUMBER=${ZONEMINDER_MAX_LOG_NUMBER}
+      - EMAIL_HOST=${ZONEMINDER_EMAIL_HOST}
+      - EMAIL_PORT=${ZONEMINDER_EMAIL_PORT}
+      - EMAIL_ADDRESS=${ZONEMINDER_EMAIL_ADDRESS}
+      - EMAIL_PASSWORD=${ZONEMINDER_EMAIL_PASSWORD}
     labels:
       - traefik.enable=true
       - traefik.http.routers.zoneminder.tls.certresolver=${PREFIX}_resolver
