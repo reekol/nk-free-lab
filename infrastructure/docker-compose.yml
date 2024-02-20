@@ -840,6 +840,7 @@ services:
         tmpfs:
           size: 1000000000
     environment:
+      - MYSQL_HOST=${ZONEMINDER_MYSQL_HOST}
       - MYSQL_ROOT_PASSWORD=${ZONEMINDER_MYSQL_ROOT_PASSWORD}
       - MYSQL_USER=${ZONEMINDER_MYSQL_USER}
       - MYSQL_PASSWORD=${ZONEMINDER_MYSQL_PASSWORD}
@@ -855,7 +856,7 @@ services:
       - traefik.http.routers.zoneminder.tls.certresolver=${PREFIX}_resolver
       - traefik.http.routers.zoneminder.rule=Host(`zoneminder.${FQDN}`)
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss
-      - traefik.http.routers.zoneminder.entrypoints=https,vnc
+      - traefik.http.routers.zoneminder.entrypoints=https
       - traefik.http.routers.zoneminder.tls=true
       - traefik.http.services.zoneminder.loadbalancer.passhostheader=false
       - traefik.http.services.zoneminder.loadbalancer.server.scheme=http
