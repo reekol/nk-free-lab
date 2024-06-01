@@ -6,8 +6,10 @@
 #define HAVE_NETDUMP 0
 
 #ifndef STASSID
-#define STASSID "BarLogata"
-#define STAPSK "siriysree"
+#define STASSID "BarLogata-2.0"
+#define STAPSK "61330069"
+#define STAPSKEXT "76543210"
+#define EXTNAME "_GUEST"
 #endif
 
 #include <ESP8266WiFi.h>
@@ -90,7 +92,7 @@ void setup() {
 
   WiFi.softAPConfig(  // enable AP, with android-compatible google domain
     IPAddress(172, 217, 28, 254), IPAddress(172, 217, 28, 254), IPAddress(255, 255, 255, 0));
-  WiFi.softAP(STASSID "Extender", STAPSK);
+  WiFi.softAP(STASSID EXTNAME, STAPSKEXT);
   Serial.printf("AP: %s\n", WiFi.softAPIP().toString().c_str());
 
   Serial.printf("Heap before: %d\n", ESP.getFreeHeap());
@@ -111,6 +113,7 @@ void setup() {
 #else
 
 void setup() {
+  WebSerial.println("Hello!");
   Serial.begin(115200);
   Serial.printf("\n\nNAPT not supported in this configuration\n");
 }
