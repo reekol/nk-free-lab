@@ -35,10 +35,6 @@ void handleRngNum() {
   http_server.send(200, "text/plain", str);
 }
 
-void handleQrEnc() {
-    
-  http_server.send(200, "text/plain", qr);
-}
 void wifiReconnect(){
   
   while (wifiMulti.run() != WL_CONNECTED) { // Wait for the Wi-Fi to connect: scan for Wi-Fi networks, and connect to the strongest of the networks above
