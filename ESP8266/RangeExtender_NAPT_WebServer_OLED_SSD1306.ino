@@ -1,5 +1,3 @@
-// WIP https request
-
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <lwip/napt.h>
@@ -22,7 +20,6 @@ ESP8266WiFiMulti wifiMulti;
 ESP8266WebServer http_server(80);
 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0,/*clock=*/14,/*data*/12, U8X8_PIN_NONE);
-const char*  server = "www.howsmyssl.com";  // Server URL
 
 void handleRoot() {
   http_server.send(200, "text/html", "<h1>You are connected</h1>");
@@ -41,14 +38,11 @@ void wifiReconnect(){
   server.setDns(WiFi.dnsIP(0));
 }
 
-const char* rootCACertificate = "";
-
 void httpsSendData(){
 
   WiFiClientSecure *client = new WiFiClientSecure;
   if(client) {
-    // set secure client with certificate
-//    client->setCACert(rootCACertificate);
+    
     client->setInsecure();
     //create an HTTPClient instance
     HTTPClient https;
@@ -104,7 +98,7 @@ void setup() {
   );
   
   WiFi.softAP(EXTNAME, STAPSKEXT);
-
+  Serial.print ("\n");
   Serial.printf("AP: %s\n", WiFi.softAPIP().toString().c_str());
   Serial.printf("Heap before: %d\n", ESP.getFreeHeap());
   err_t ret = ip_napt_init(NAPT, NAPT_PORT);
