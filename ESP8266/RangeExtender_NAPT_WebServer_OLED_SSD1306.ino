@@ -1,3 +1,4 @@
+#include <ESP8266TrueRandom.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <lwip/napt.h>
@@ -6,9 +7,9 @@
 #include <Wire.h>
 #include <U8g2lib.h>
 #include <ESP8266WebServer.h>
-#include <ESP8266HTTPClient.h>
+//#include <ESP8266HTTPClient.h>
 //#include <WiFiClientSecureBearSSL.h>
-#include <WiFiClientSecure.h>
+//#include <WiFiClientSecure.h>
 
 #define STAPSKEXT "76543210"
 #define EXTNAME "ESP_GUEST"
@@ -27,7 +28,17 @@ void handleRoot() {
 void handleNotFound() {
   http_server.send(404, "text/html", "<h1>404, Monkey not found</h1>");
 }
+void handleRngNum() {
+  char str[256] = "Rng:";
+  long long x = ESP8266TrueRandom.random(200);
+  sprintf(str, "%lld", x);
+  http_server.send(200, "text/plain", str);
+}
 
+void handleQrEnc() {
+    
+  http_server.send(200, "text/plain", qr);
+}
 void wifiReconnect(){
   
   while (wifiMulti.run() != WL_CONNECTED) { // Wait for the Wi-Fi to connect: scan for Wi-Fi networks, and connect to the strongest of the networks above
@@ -38,44 +49,15 @@ void wifiReconnect(){
   server.setDns(WiFi.dnsIP(0));
 }
 
+const char* github_host = "api.github.com";
+const uint16_t github_port = 443;
+
 void httpsSendData(){
 
-  WiFiClientSecure *client = new WiFiClientSecure;
-  if(client) {
-    
-    client->setInsecure();
-    //create an HTTPClient instance
-    HTTPClient https;
-
-    //Initializing an HTTPS communication using the secure client
-    Serial.print("[HTTPS] begin...\n");
-    if (https.begin(*client, "https://www.howsmyssl.com/a/check")) {  // HTTPS
-      Serial.print("[HTTPS] GET...\n");
-      // start connection and send HTTP header
-      int httpCode = https.GET();
-      // httpCode will be negative on error
-      if (httpCode > 0) {
-      // HTTP header has been send and Server response header has been handled
-       Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
-      // file found at server
-        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-          // print server response payload
-          String payload = https.getString();
-          Serial.println(payload);
-        }
-      }
-      else {
-        Serial.printf("[HTTPS] GET... failed, error: %s\n", https.errorToString(httpCode).c_str());
-      }
-      https.end();
-    }
-  }
-  else {
-    Serial.printf("[HTTPS] Unable to connect\n");
-  }
 }
   
 void setup() {
+  randomSeed(ESP8266TrueRandom.random());
   Serial.begin(115200, SERIAL_8N1);
   u8g2.begin();
   u8g2.clearBuffer();
@@ -114,6 +96,7 @@ void setup() {
   if (ret != ERR_OK) { Serial.printf("NAPT initialization failed\n"); }
 
   http_server.on("/", handleRoot);
+  http_server.on("/rng/num", handleRngNum);
   http_server.onNotFound(handleNotFound);
   http_server.begin();
 }
@@ -140,9 +123,9 @@ void loop() {
       u8g2.drawStr(5,45, EMPTY_LINE);
       u8g2.drawStr(5,45, WiFi.softAPIP().toString().c_str());
       u8g2.sendBuffer();
-      delay(3000);
+      delay(1000);
       httpsSendData();
     }
 
-    delay(1000);
+//    delay(1000);
 }
