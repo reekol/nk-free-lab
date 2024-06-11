@@ -29,10 +29,16 @@ void handleNotFound() {
   http_server.send(404, "text/html", "<h1>404, Monkey not found</h1>");
 }
 void handleRngNum() {
-  char str[256] = "Rng:";
-  long long x = ESP8266TrueRandom.random(200);
-  sprintf(str, "%lld", x);
-  http_server.send(200, "text/plain", str);
+  int i;
+  String message = "Rng:";
+  for(i = 0; i < 100; i++)
+  {
+      long long x = ESP8266TrueRandom.random(100);
+      message +=",";
+      message += x;
+  }
+  http_server.send(200, "text/plain", message);
+
 }
 
 void wifiReconnect(){
