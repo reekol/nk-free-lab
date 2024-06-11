@@ -7,6 +7,10 @@
 #include <Wire.h>
 #include <U8g2lib.h>
 #include <ESP8266WebServer.h>
+
+#include <Ed25519.h>
+#include <arduino_base64.hpp>
+
 //#include <ESP8266HTTPClient.h>
 //#include <WiFiClientSecureBearSSL.h>
 //#include <WiFiClientSecure.h>
@@ -31,14 +35,49 @@ void handleNotFound() {
 void handleRngNum() {
   int i;
   String message = "Rng:";
-  for(i = 0; i < 100; i++)
+  for(i = 0; i < 1000; i++)
   {
-      long long x = ESP8266TrueRandom.random(100);
+      long long x = ESP8266TrueRandom.random(1000);
       message +=",";
       message += x;
   }
   http_server.send(200, "text/plain", message);
 
+}
+
+void handleKeyGen(){
+
+  uint8_t privateKey[32];
+  uint8_t publicKey[32];
+  uint8_t i;
+
+  Ed25519::generatePrivateKey(privateKey);
+  Ed25519::derivePublicKey(publicKey, privateKey);
+
+  String strPrivate;
+  String strPublic;
+  String message = "\nPrivateKey:\n";
+
+  message += "\n-----BEGIN OPENSSH PRIVATE KEY-----\n";
+
+  auto inputLength = sizeof(privateKey);
+  char output[base64::encodeLength(inputLength)];
+  base64::encode(input, inputLength, output);
+  
+  message += output;
+  message +="\n-----END OPENSSH PRIVATE KEY-----\n";
+  message += "\nPublicKey:\n";
+
+  message += "\nsh-ed25519 ";
+  for (i = 0; i < (uint8_t)(sizeof(publicKey)); i++) {
+    if (publicKey[i] < 0x10) { /* To print "0F", not "F" */
+      message += "0";
+    }
+    char buff[32]; sprintf(buff, "%x", publicKey[i]);
+    message += buff;
+  }
+  message += " esp-generated\n";
+  http_server.send(200, "text/plain", message);
 }
 
 void wifiReconnect(){
@@ -72,7 +111,7 @@ void setup() {
   WiFi.mode(WIFI_STA);
   
   wifiMulti.addAP("BarLogata-2.0", "61330069");   // add Wi-Fi networks you want to connect to
-  wifiMulti.addAP("BarLogataGuest", "76543210");
+  wifiMulti.addAP("BarLogata", "");
   wifiMulti.addAP("moto g(8) plus 7366", "76543210");
 
   WiFi.softAPConfig(  // enable AP, with android-compatible google domain
@@ -99,6 +138,7 @@ void setup() {
 
   http_server.on("/", handleRoot);
   http_server.on("/rng/num", handleRngNum);
+  http_server.on("/rng/keygen", handleKeyGen);
   http_server.onNotFound(handleNotFound);
   http_server.begin();
 }
