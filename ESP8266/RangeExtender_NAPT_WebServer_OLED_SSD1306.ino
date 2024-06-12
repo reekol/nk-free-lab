@@ -62,21 +62,20 @@ void handleKeyGen(){
 
   auto inputLength = sizeof(privateKey);
   // Rename the namespace from base64_encode module to nkbase64 since it is declared by the web server
-  char output[nkbase64::encodeLength(inputLength);];
+  char output[nkbase64::encodeLength(inputLength)];
   nkbase64::encode(privateKey, inputLength, output);
   
   message += (String)output;
   message +="\n-----END OPENSSH PRIVATE KEY-----\n";
   message += "\nPublicKey:\n";
 
-  message += "\nsh-ed25519 ";
-  for (i = 0; i < (uint8_t)(sizeof(publicKey)); i++) {
-    if (publicKey[i] < 0x10) { /* To print "0F", not "F" */
-      message += "0";
-    }
-    char buff[32]; sprintf(buff, "%x", publicKey[i]);
-    message += buff;
-  }
+  message += "\nssh-ed25519 ";
+
+  auto inputLength = sizeof(publicKey);
+  // Rename the namespace from base64_encode module to nkbase64 since it is declared by the web server
+  char output[nkbase64::encodeLength(inputLength)];
+  nkbase64::encode(publicKey, inputLength, output);
+  
   message += " esp-generated\n";
   http_server.send(200, "text/plain", message);
 }
