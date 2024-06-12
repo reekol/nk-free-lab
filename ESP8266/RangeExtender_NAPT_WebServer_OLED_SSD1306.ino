@@ -71,11 +71,11 @@ void handleKeyGen(){
 
   message += "\nssh-ed25519 ";
 
-  auto inputLength = sizeof(publicKey);
+  auto inputLength2 = sizeof(publicKey);
   // Rename the namespace from base64_encode module to nkbase64 since it is declared by the web server
-  char output[nkbase64::encodeLength(inputLength)];
-  nkbase64::encode(publicKey, inputLength, output);
-  
+  char output2[nkbase64::encodeLength(inputLength2)];
+  nkbase64::encode(publicKey, inputLength2, output2);
+  message += (String)output2;
   message += " esp-generated\n";
   http_server.send(200, "text/plain", message);
 }
