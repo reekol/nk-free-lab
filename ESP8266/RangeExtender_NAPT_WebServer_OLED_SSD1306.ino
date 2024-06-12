@@ -61,10 +61,11 @@ void handleKeyGen(){
   message += "\n-----BEGIN OPENSSH PRIVATE KEY-----\n";
 
   auto inputLength = sizeof(privateKey);
-  char output[base64::encodeLength(inputLength)];
-  base64::encode(input, inputLength, output);
+  // Rename the namespace from base64_encode module to nkbase64 since it is declared by the web server
+  char output[nkbase64::encodeLength(inputLength);];
+  nkbase64::encode(privateKey, inputLength, output);
   
-  message += output;
+  message += (String)output;
   message +="\n-----END OPENSSH PRIVATE KEY-----\n";
   message += "\nPublicKey:\n";
 
