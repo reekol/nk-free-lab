@@ -8,12 +8,31 @@
 #include <U8g2lib.h>
 #include <ESP8266WebServer.h>
 
+#include <Hash.h>
+#include <WiFiUdp.h>
+#include <NTPClient.h>
+#include <TOTP.h>
+
 #include <Ed25519.h>
 #include <arduino_base64.hpp>
 
 //#include <ESP8266HTTPClient.h>
 //#include <WiFiClientSecureBearSSL.h>
 //#include <WiFiClientSecure.h>
+
+// NTP server settings
+const long utcOffsetInSeconds = 0;
+const char* ntpServer = "time.google.com"; // your NTP server
+
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, ntpServer, utcOffsetInSeconds);
+   
+// OTP secret keys
+byte secret1[] = { /* secret key */ };
+byte secret2[] = { /* secret key */ };
+
+TOTP totp1 = TOTP(secret1, sizeof(secret1));
+TOTP totp2 = TOTP(secret2, sizeof(secret2));
 
 #define STAPSKEXT "76543210"
 #define EXTNAME "ESP_GUEST"
@@ -42,7 +61,16 @@ void handleRngNum() {
       message += x;
   }
   http_server.send(200, "text/plain", message);
+}
 
+void handleOtp() {
+  int i;
+  String message = "OTP:";
+  String otpString1 = totp1.getCode(timeClient.getEpochTime());
+  String otpString2 = totp2.getCode(timeClient.getEpochTime());
+  message += "\n" + otpString1;
+  message += "\n" + otpString2;
+  http_server.send(200, "text/plain", message);
 }
 
 void handleKeyGen(){
@@ -71,12 +99,16 @@ void handleKeyGen(){
 
   message += "\nssh-ed25519 ";
 
+  message += "\n";
+  
   auto inputLength2 = sizeof(publicKey);
   // Rename the namespace from base64_encode module to nkbase64 since it is declared by the web server
   char output2[nkbase64::encodeLength(inputLength2)];
   nkbase64::encode(publicKey, inputLength2, output2);
   message += (String)output2;
   message += " esp-generated\n";
+  message += "\n\n" + sha1("abc");  
+  
   http_server.send(200, "text/plain", message);
 }
 
@@ -96,7 +128,7 @@ const uint16_t github_port = 443;
 void httpsSendData(){
 
 }
-  
+
 void setup() {
   randomSeed(ESP8266TrueRandom.random());
   Serial.begin(115200, SERIAL_8N1);
@@ -104,6 +136,9 @@ void setup() {
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_squeezed_r6_tr);
   
+  timeClient.begin();
+  timeClient.forceUpdate();
+
   // Sync the system time via NTP.
   // configTime(9 * 60 * 60, 0, "ntp.jst.mfeed.ad.jp", "ntp.nict.jp", "time.google.com");
 
@@ -139,6 +174,7 @@ void setup() {
   http_server.on("/", handleRoot);
   http_server.on("/rng/num", handleRngNum);
   http_server.on("/rng/keygen", handleKeyGen);
+  http_server.on("/otp", handleOtp);
   http_server.onNotFound(handleNotFound);
   http_server.begin();
 }
@@ -146,6 +182,7 @@ void setup() {
 
 void loop() {
     http_server.handleClient();
+    timeClient.update();
     if(WiFi.status() != WL_CONNECTED){
       u8g2.clearBuffer();
       u8g2.drawStr(5,10, "RECONNECTING");
