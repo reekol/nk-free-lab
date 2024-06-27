@@ -10,29 +10,32 @@
 
 #include <Hash.h>
 #include <WiFiUdp.h>
-#include <NTPClient.h>
 #include <TOTP.h>
 
 #include <Ed25519.h>
 #include <arduino_base64.hpp>
 
+#define FLASH_BUTTON_PIN 0
 //#include <ESP8266HTTPClient.h>
 //#include <WiFiClientSecureBearSSL.h>
 //#include <WiFiClientSecure.h>
 
-// NTP server settings
-const long utcOffsetInSeconds = 0;
-const char* ntpServer = "time.google.com"; // your NTP server
 
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, ntpServer, utcOffsetInSeconds);
    
 // OTP secret keys
-byte secret1[] = { /* secret key */ };
-byte secret2[] = { /* secret key */ };
+
+// convert python.py bellow
+// import base64
+// tokenFreeOtpExport  = [94, -61, 23, 59, 100, 29, 26, -84, -12, -119]
+// secret = bytes((x + 256) & 255 for x in tokenFreeOtpExport); print(secret)
+// b = list(secret); print(b)
+// code = base64.b32encode(secret); print(code.decode())
+
+byte secret1[] = { 194, 195, 123, 159, 100, 129, 126, 172, 244, 137 };
+// byte secret2[] = { 0xae, 0x22, 0x2c, 0x6c, 0x9e, 0xf2, 0xcb, 0x5c, 0x02, 0x5c };
 
 TOTP totp1 = TOTP(secret1, sizeof(secret1));
-TOTP totp2 = TOTP(secret2, sizeof(secret2));
+//TOTP totp2 = TOTP(secret2, sizeof(secret2));
 
 #define STAPSKEXT "76543210"
 #define EXTNAME "ESP_GUEST"
@@ -66,10 +69,10 @@ void handleRngNum() {
 void handleOtp() {
   int i;
   String message = "OTP:";
-  String otpString1 = totp1.getCode(timeClient.getEpochTime());
-  String otpString2 = totp2.getCode(timeClient.getEpochTime());
+  String otpString1 = totp1.getCode(time (nullptr));
+//  String otpString2 = totp2.getCode(time (nullptr));
   message += "\n" + otpString1;
-  message += "\n" + otpString2;
+//  message += "\n" + otpString2;
   http_server.send(200, "text/plain", message);
 }
 
@@ -129,18 +132,32 @@ void httpsSendData(){
 
 }
 
+void showInfoScreen(){
+    u8g2.setFont(u8g2_font_squeezed_r6_tr);
+    u8g2.clearBuffer();
+    u8g2.drawStr(5, 10, EMPTY_LINE);
+    u8g2.drawStr(5, 10, WiFi.localIP().toString().c_str());
+    u8g2.drawStr(63,10, WiFi.SSID().c_str());
+
+    u8g2.drawStr(5,25, EMPTY_LINE);
+    u8g2.drawStr(5,25, WiFi.dnsIP(0).toString().c_str());
+    u8g2.drawStr(5,35, EMPTY_LINE);
+    u8g2.drawStr(5,35, WiFi.dnsIP(1).toString().c_str());
+    u8g2.drawStr(5,45, EMPTY_LINE);
+    u8g2.drawStr(5,45, WiFi.softAPIP().toString().c_str());
+    u8g2.sendBuffer();
+}
+
 void setup() {
+  pinMode(FLASH_BUTTON_PIN, INPUT_PULLUP);
   randomSeed(ESP8266TrueRandom.random());
   Serial.begin(115200, SERIAL_8N1);
   u8g2.begin();
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_squeezed_r6_tr);
   
-  timeClient.begin();
-  timeClient.forceUpdate();
-
   // Sync the system time via NTP.
-  // configTime(9 * 60 * 60, 0, "ntp.jst.mfeed.ad.jp", "ntp.nict.jp", "time.google.com");
+  configTime(1 * 60 * 60, 0, "ntp.jst.mfeed.ad.jp", "ntp.nict.jp", "time.google.com");
 
   // first, connect to STA so we can get a proper local DNS server
   WiFi.mode(WIFI_STA);
@@ -182,7 +199,15 @@ void setup() {
 
 void loop() {
     http_server.handleClient();
-    timeClient.update();
+    if (digitalRead(FLASH_BUTTON_PIN) == LOW){
+      u8g2.clearBuffer();
+      u8g2.drawStr(5,10, "OTP");
+      u8g2.setFont(u8g2_font_lubB24_tn);
+      u8g2.drawStr(0,60, totp1.getCode(time (nullptr)));
+      u8g2.sendBuffer();
+      u8g2.setFont(u8g2_font_squeezed_r6_tr);
+    }
+    
     if(WiFi.status() != WL_CONNECTED){
       u8g2.clearBuffer();
       u8g2.drawStr(5,10, "RECONNECTING");
@@ -190,18 +215,8 @@ void loop() {
 
       wifiReconnect();
 
-      u8g2.clearBuffer();
-      u8g2.drawStr(5, 10, EMPTY_LINE);
-      u8g2.drawStr(5, 10, WiFi.localIP().toString().c_str());
-      u8g2.drawStr(63,10, WiFi.SSID().c_str());
-
-      u8g2.drawStr(5,25, EMPTY_LINE);
-      u8g2.drawStr(5,25, WiFi.dnsIP(0).toString().c_str());
-      u8g2.drawStr(5,35, EMPTY_LINE);
-      u8g2.drawStr(5,35, WiFi.dnsIP(1).toString().c_str());
-      u8g2.drawStr(5,45, EMPTY_LINE);
-      u8g2.drawStr(5,45, WiFi.softAPIP().toString().c_str());
-      u8g2.sendBuffer();
+      showInfoScreen();
+      
       delay(1000);
       httpsSendData();
     }
